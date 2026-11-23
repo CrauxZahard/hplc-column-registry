@@ -76,10 +76,10 @@ const TYPES = [
   {
     code: "I",
     name: "Acclaim Mulvit Simultant",
-    product: "Acclaim 120 C18",
-    phase: "C18",
+    product: "Acclaim PolarAdvantage II (PA2)",
+    phase: "C18 (polar-embedded)",
     supplier: "Thermo Scientific",
-    dimensions: { length: 250, diameter: 4.6, particle: 5, pore: 120 }
+    dimensions: { length: 150, diameter: 4.6, particle: 3, pore: 120 }
   },
   {
     code: "J",

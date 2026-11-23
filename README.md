@@ -108,10 +108,12 @@ Dimensions are stored per type and shown on the type cards, stock table, column 
 | F | Hypersil ODS | 250 × 4.6 mm | 5 µm | 120 Å |
 | G | Acclaim 120 C18 | 250 × 4.6 mm | 5 µm | 120 Å |
 | H | Luna C18(2) | 250 × 4.6 mm | 5 µm | 100 Å |
-| I | Acclaim 120 C18 | 250 × 4.6 mm | 5 µm | 120 Å |
+| I | Acclaim PolarAdvantage II (PA2) | 150 × 4.6 mm | 3 µm | 120 Å |
 | J | Bondclone C18 | 300 × 3.9 mm | 10 µm | 148 Å |
 
 These are typical manufacturer specifications for the product lines, not a replacement for the label on the physical column. Confirm length, internal diameter, particle size, and pore size before installing a column.
+
+G and I intentionally use different Acclaim models even though the lab names both start with “Acclaim”. G is the classic **Acclaim 120 C18** used for the 4-aminophenol/paracetamol work. I is the polar-embedded **Acclaim PolarAdvantage II (PA2)**, which matches Thermo Scientific multivitamin application work. Confirm the exact part number and dimensions against the physical labels.
 
 Reference product pages:
 
@@ -122,6 +124,7 @@ Reference product pages:
 - Hypersil CN: [Thermo Scientific 30805-254630](https://www.thermofisher.com/order/catalog/product/30805-254630)
 - Hypersil ODS: [Thermo Scientific 30105-254630](https://www.thermofisher.com/order/catalog/product/30105-254630)
 - Acclaim 120 C18: [Thermo Scientific 059149](https://www.thermofisher.com/order/catalog/product/059149)
+- Acclaim PolarAdvantage II (PA2): [Thermo Scientific 063191](https://www.thermofisher.com/order/catalog/product/063191)
 - Luna C18(2): [Phenomenex 00G-4252-E0](https://www.phenomenex.com/part/00g-4252-e0)
 - Bondclone C18: [Phenomenex 00H-2117-C0](https://www.phenomenex.com/part/00h-2117-c0)
 
