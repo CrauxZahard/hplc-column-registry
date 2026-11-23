@@ -4,17 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>IPC Column Registry — HPLC Column Management</title>
-  <meta name="description" content="HPLC column registry: unactivated stock, column activations, purposes, and change history.">
+  <meta name="description" content="HPLC column registry: stock runway, column dimensions, lifecycle estimates, activations, purposes, and change history.">
   <meta name="theme-color" content="#f7f7f8">
   <meta name="color-scheme" content="light dark">
   <meta property="og:title" content="IPC Column Registry — HPLC Column Management">
-  <meta property="og:description" content="HPLC column registry: unactivated stock, column activations, purposes, and change history.">
+  <meta property="og:description" content="HPLC column registry: stock runway, column dimensions, lifecycle estimates, activations, purposes, and change history.">
   <meta property="og:type" content="website">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preload" href="assets/fonts/inter-latin-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/jetbrains-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="assets/app.css">
   <link rel="stylesheet" href="assets/spectrum.css">
+  <link rel="stylesheet" href="assets/operations.css">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -108,13 +109,32 @@
 
       <div class="sidebar-spacer"></div>
 
+      <div class="sidebar-health" aria-label="Registry health">
+        <p class="nav-label">Registry health</p>
+        <div class="sidebar-health-row"><span>Out of stock</span><strong id="sideOut">0</strong></div>
+        <div class="sidebar-health-row"><span>Due replacement</span><strong id="sideDue">0</strong></div>
+        <div class="sidebar-health-row"><span>Active columns</span><strong id="sideActive">0</strong></div>
+      </div>
+
       <div class="sidebar-note">
-        <div class="sidebar-note-icon" aria-hidden="true">
-          <svg class="icon"><use href="#i-database"></use></svg>
+        <div class="sidebar-note-head">
+          <div class="sidebar-note-icon" aria-hidden="true">
+            <svg class="icon"><use href="#i-database"></use></svg>
+          </div>
+          <div>
+            <strong>Local data</strong>
+            <p>Saved <span data-save-status>not yet</span></p>
+          </div>
         </div>
-        <div>
-          <strong>Local data</strong>
-          <p>Stored automatically in this browser.</p>
+        <div class="sidebar-data-actions">
+          <button class="sidebar-data-btn" type="button" data-action="backup-json">
+            <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>
+            Backup
+          </button>
+          <button class="sidebar-data-btn" type="button" data-action="restore-json">
+            <svg class="icon" aria-hidden="true"><use href="#i-database"></use></svg>
+            Restore
+          </button>
         </div>
       </div>
 

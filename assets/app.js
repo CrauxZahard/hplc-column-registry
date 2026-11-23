@@ -9,16 +9,86 @@ const YEAR_KEY = "ipc-column-registry-year";
 const IPC_KEYWORD = "IPC";
 
 const TYPES = [
-  { code: "A", name: "Licospher C18" },
-  { code: "B", name: "Licospher CN" },
-  { code: "C", name: "Bondapack C18" },
-  { code: "D", name: "Shodex C18" },
-  { code: "E", name: "Thermo CN" },
-  { code: "F", name: "Thermo ODS" },
-  { code: "G", name: "Acclaim 4-Aminophenol" },
-  { code: "H", name: "Phenomenex" },
-  { code: "I", name: "Acclaim Mulvit Simultant" },
-  { code: "J", name: "Bondclone" }
+  {
+    code: "A",
+    name: "Licospher C18",
+    product: "LiChrospher 100 RP-18",
+    phase: "C18",
+    supplier: "Merck",
+    dimensions: { length: 250, diameter: 4.6, particle: 5, pore: 100 }
+  },
+  {
+    code: "B",
+    name: "Licospher CN",
+    product: "LiChrospher 100 CN",
+    phase: "CN",
+    supplier: "Merck",
+    dimensions: { length: 250, diameter: 4.6, particle: 5, pore: 100 }
+  },
+  {
+    code: "C",
+    name: "Bondapack C18",
+    product: "µBondapak C18",
+    phase: "C18",
+    supplier: "Waters",
+    dimensions: { length: 300, diameter: 3.9, particle: 10, pore: 125 }
+  },
+  {
+    code: "D",
+    name: "Shodex C18",
+    product: "Shodex Silica C18M 4E",
+    phase: "C18",
+    supplier: "Shodex",
+    dimensions: { length: 250, diameter: 4.6, particle: 5, pore: 100 }
+  },
+  {
+    code: "E",
+    name: "Thermo CN",
+    product: "Hypersil CN",
+    phase: "CN",
+    supplier: "Thermo Scientific",
+    dimensions: { length: 250, diameter: 4.6, particle: 5, pore: 120 }
+  },
+  {
+    code: "F",
+    name: "Thermo ODS",
+    product: "Hypersil ODS",
+    phase: "C18",
+    supplier: "Thermo Scientific",
+    dimensions: { length: 250, diameter: 4.6, particle: 5, pore: 120 }
+  },
+  {
+    code: "G",
+    name: "Acclaim 4-Aminophenol",
+    product: "Acclaim 120 C18",
+    phase: "C18",
+    supplier: "Thermo Scientific",
+    dimensions: { length: 250, diameter: 4.6, particle: 5, pore: 120 }
+  },
+  {
+    code: "H",
+    name: "Phenomenex",
+    product: "Luna C18(2)",
+    phase: "C18",
+    supplier: "Phenomenex",
+    dimensions: { length: 250, diameter: 4.6, particle: 5, pore: 100 }
+  },
+  {
+    code: "I",
+    name: "Acclaim Mulvit Simultant",
+    product: "Acclaim 120 C18",
+    phase: "C18",
+    supplier: "Thermo Scientific",
+    dimensions: { length: 250, diameter: 4.6, particle: 5, pore: 120 }
+  },
+  {
+    code: "J",
+    name: "Bondclone",
+    product: "Bondclone C18",
+    phase: "C18",
+    supplier: "Phenomenex",
+    dimensions: { length: 300, diameter: 3.9, particle: 10, pore: 148 }
+  }
 ];
 
 const PURPOSES = [
@@ -84,7 +154,7 @@ function columnStatusLabel(column) {
 function columnStatusBadge(column) {
   const status = columnStatus(column);
   const active = status === "active";
-  return `<span class="status status--${status}">${icon(active ? "check" : "archive")}${active ? "Active" : "Inactive"}</span>`;
+  return `<span class="status status--${status}"><span class="status-dot" aria-hidden="true"></span>${active ? "Active" : "Inactive"}</span>`;
 }
 
 function statusValueLabel(value) {
@@ -174,6 +244,12 @@ function formatDate(iso) {
   });
 }
 
+function formatShortDate(iso) {
+  const date = parseISO(iso);
+  if (!date || Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+}
+
 function todayISO() {
   const now = new Date();
   return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
@@ -232,6 +308,216 @@ function latestActivationForType(typeCode, year = null) {
     .at(-1);
 }
 
+function typeDimensions(type) {
+  const dimensions = type?.dimensions;
+  if (!dimensions) return "—";
+  return `${dimensions.length} × ${dimensions.diameter} mm · ${dimensions.particle} µm · ${dimensions.pore} Å`;
+}
+
+function typeDimensionsShort(type) {
+  const dimensions = type?.dimensions;
+  return dimensions ? `${dimensions.length} × ${dimensions.diameter} mm` : "—";
+}
+
+function typeDimensionsLines(type) {
+  const dimensions = type?.dimensions;
+  if (!dimensions) return "—";
+  return `${dimensions.length} × ${dimensions.diameter} mm<br>${dimensions.particle} µm · ${dimensions.pore} Å`;
+}
+
+function addDaysISO(iso, days) {
+  const date = parseISO(iso);
+  if (!date || !Number.isFinite(days)) return "";
+  date.setDate(date.getDate() + days);
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+}
+
+function formatMonthYear(iso) {
+  const date = parseISO(iso);
+  if (!date || Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+}
+
+function formatSavedAt(iso) {
+  const date = new Date(iso);
+  if (!iso || Number.isNaN(date.getTime())) return "Not saved yet";
+  const time = date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  const sameDay = date.toDateString() === new Date().toDateString();
+  if (sameDay) return `Today ${time}`;
+  return `${date.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })} ${time}`;
+}
+
+function formatDaysShort(value) {
+  if (!Number.isFinite(value)) return "—";
+  return `${Math.round(value)} d`;
+}
+
+function monthsElapsedForYear(year) {
+  const now = new Date();
+  if (year === now.getFullYear()) return Math.max(1, now.getMonth() + 1);
+  if (year < now.getFullYear()) return 12;
+  return 1;
+}
+
+function monthlyCountsForYear(year = ui.year) {
+  const counts = Array.from({ length: 12 }, () => 0);
+  columnsForYear(year).forEach((column) => {
+    const date = parseISO(column.activatedAt);
+    if (date) counts[date.getMonth()] += 1;
+  });
+  return counts;
+}
+
+function burnRateForType(typeCode, year = currentYear()) {
+  const count = columnsForType(typeCode, year).length;
+  return count / monthsElapsedForYear(year);
+}
+
+function stockCoverForType(typeCode, year = currentYear()) {
+  const stock = db.stock[typeCode] || 0;
+  const burn = burnRateForType(typeCode, year);
+
+  if (stock <= 0) {
+    return { months: 0, burn, projected: "", state: "out" };
+  }
+  if (!burn) {
+    return { months: null, burn, projected: "", state: "idle" };
+  }
+
+  const months = stock / burn;
+  const projected = addDaysISO(todayISO(), Math.round(months * 30.44));
+  return {
+    months,
+    burn,
+    projected,
+    state: months < 2 ? "low" : months < 4 ? "watch" : "ok"
+  };
+}
+
+function formatCover(cover) {
+  if (!cover) return "—";
+  if (cover.state === "out") return "Out";
+  if (cover.months === null) return "—";
+  if (cover.months >= 24) return "24+ mo";
+  if (cover.months < 1) return "<1 mo";
+  return `${cover.months.toFixed(1)} mo`;
+}
+
+function lastStockAdjustment(typeCode) {
+  return [...(db.stockMovements || [])]
+    .filter((movement) => movement.type === typeCode)
+    .sort((a, b) => {
+      const byDate = String(b.at).localeCompare(String(a.at));
+      if (byDate !== 0) return byDate;
+      return String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
+    })[0] || null;
+}
+
+function serviceDays(column) {
+  const end = columnStatus(column) === "inactive"
+    ? (column.statusChangedAt || todayISO())
+    : todayISO();
+  if (!column.activatedAt || end < column.activatedAt) return 0;
+  const days = daysBetween(column.activatedAt, end);
+  return Number.isFinite(days) ? Math.max(0, Math.round(days)) : 0;
+}
+
+function inactiveLifeDays(column) {
+  if (columnStatus(column) !== "inactive") return null;
+  const days = daysBetween(column.activatedAt, column.statusChangedAt || column.activatedAt);
+  return Number.isFinite(days) ? Math.max(0, Math.round(days)) : null;
+}
+
+function globalLifeBaseline() {
+  const values = db.columns
+    .map(inactiveLifeDays)
+    .filter((days) => Number.isFinite(days) && days > 0);
+  return {
+    days: values.length >= 2 ? Math.round(average(values)) : null,
+    sample: values.length
+  };
+}
+
+function expectedLifeForType(typeCode) {
+  const typeValues = db.columns
+    .filter((column) => column.type === typeCode)
+    .map(inactiveLifeDays)
+    .filter((days) => Number.isFinite(days) && days > 0);
+
+  if (typeValues.length >= 2) {
+    return {
+      days: Math.round(average(typeValues)),
+      sample: typeValues.length,
+      source: "type"
+    };
+  }
+
+  const baseline = globalLifeBaseline();
+  if (baseline.days !== null) {
+    return {
+      days: baseline.days,
+      sample: baseline.sample,
+      source: "all"
+    };
+  }
+
+  return { days: null, sample: baseline.sample, source: "none" };
+}
+
+function lifecycleFor(column) {
+  const expected = expectedLifeForType(column.type);
+  const days = serviceDays(column);
+
+  if (columnStatus(column) === "inactive") {
+    return { days, expected, remaining: null, state: "retired" };
+  }
+  if (expected.days === null) {
+    return { days, expected, remaining: null, state: "unknown" };
+  }
+
+  const remaining = expected.days - days;
+  const ratio = days / expected.days;
+  return {
+    days,
+    expected,
+    remaining,
+    state: remaining <= 0 ? "due" : ratio >= 0.85 ? "soon" : "ok"
+  };
+}
+
+function lifeBadge(life) {
+  if (life.state === "due") return `<span class="status status--out">${icon("alert")}Due</span>`;
+  if (life.state === "soon") return `<span class="status status--low">${icon("alert")}Soon</span>`;
+  if (life.state === "retired") return `<span class="status status--inactive">${icon("archive")}Retired</span>`;
+  if (life.state === "unknown") return `<span class="status status--inactive">No estimate</span>`;
+  return `<span class="status status--ok">${icon("check")}On track</span>`;
+}
+
+function lifeRemainingText(life) {
+  if (life.state === "retired") return `${formatDaysShort(life.days)} life`;
+  if (life.state === "unknown" || !Number.isFinite(life.remaining)) return "—";
+  if (life.state === "due") return `${formatDaysShort(Math.abs(life.remaining))} over`;
+  return `${formatDaysShort(life.remaining)} left`;
+}
+
+function expectedLifeLabel(typeCode) {
+  const expected = expectedLifeForType(typeCode);
+  if (!expected.days) return "—";
+  return `~${expected.days} d`;
+}
+
+function activeLifeWarnings(year = ui.year) {
+  return db.columns
+    .filter((column) => column.year === year && columnStatus(column) === "active")
+    .map((column) => ({ column, life: lifecycleFor(column) }))
+    .filter((item) => item.life.state === "due" || item.life.state === "soon")
+    .sort((a, b) => (a.life.remaining ?? Infinity) - (b.life.remaining ?? Infinity));
+}
+
+function niceChartMax(value) {
+  return Math.max(4, Math.ceil(Math.max(1, value) / 4) * 4);
+}
+
 function nextSequence(typeCode, year) {
   const max = db.columns
     .filter((column) => column.type === typeCode && column.year === year)
@@ -278,6 +564,7 @@ function getYears() {
 }
 
 function saveDb() {
+  db.updatedAt = new Date().toISOString();
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
   } catch (error) {
@@ -286,6 +573,13 @@ function saveDb() {
       showToast("Browser storage is unavailable. Data will only last for this session.", "error");
     }
   }
+  updateSaveStatus();
+}
+
+function updateSaveStatus() {
+  document.querySelectorAll("[data-save-status]").forEach((element) => {
+    element.textContent = formatSavedAt(db?.updatedAt);
+  });
 }
 
 function saveYear() {
@@ -443,7 +737,8 @@ function seedDb() {
     version: 1,
     stock: { ...SEED_STOCK },
     stockMovements,
-    columns
+    columns,
+    updatedAt: new Date().toISOString()
   };
 }
 
@@ -460,6 +755,7 @@ function loadDb() {
         Array.isArray(parsed.columns)
       ) {
         if (!Array.isArray(parsed.stockMovements)) parsed.stockMovements = [];
+        if (!parsed.updatedAt) parsed.updatedAt = new Date().toISOString();
         parsed.columns.forEach((column) => {
           if (column.status !== "active" && column.status !== "inactive") column.status = "active";
           if (!column.statusChangedAt) column.statusChangedAt = column.activatedAt;
@@ -550,6 +846,21 @@ function updateChrome() {
 
   const stockBadge = document.getElementById("navStockCount");
   if (stockBadge) stockBadge.textContent = String(stockTotal);
+
+  const outCount = TYPES.filter((type) => (db.stock[type.code] || 0) === 0).length;
+  const dueCount = activeLifeWarnings(ui.year).filter((item) => item.life.state === "due").length;
+  const sideOut = document.getElementById("sideOut");
+  const sideDue = document.getElementById("sideDue");
+  const sideActive = document.getElementById("sideActive");
+  if (sideOut) {
+    sideOut.textContent = String(outCount);
+    sideOut.classList.toggle("is-bad", outCount > 0);
+  }
+  if (sideDue) {
+    sideDue.textContent = String(dueCount);
+    sideDue.classList.toggle("is-bad", dueCount > 0);
+  }
+  if (sideActive) sideActive.textContent = String(yearActivations.filter((column) => columnStatus(column) === "active").length);
 
   const yearSelect = document.getElementById("yearSelect");
   if (yearSelect) {
@@ -666,7 +977,9 @@ function render() {
   main.innerHTML = view;
 
   document.querySelectorAll("[data-filter-scope]").forEach((scope) => applyFilters(scope));
+  document.querySelectorAll("[data-sort-scope]").forEach((scope) => applySort(scope));
   animateCounters();
+  updateSaveStatus();
 
   if (ui.pendingScroll && ui.stockFocus) {
     const row = document.querySelector(`.stock-row.is-focus`);
@@ -695,55 +1008,92 @@ function pageHead(eyebrow, title, subtitle, actions = "") {
   `;
 }
 
+function viewIntro(eyebrow, lede, chips = []) {
+  const chipMarkup = chips.filter(Boolean).join("");
+  return `
+    <div class="view-intro">
+      <p class="eyebrow">${eyebrow}</p>
+      <p class="view-lede">${lede}</p>
+      ${chipMarkup ? `<div class="view-chips">${chipMarkup}</div>` : ""}
+    </div>
+  `;
+}
+
+function contextChip(label, value, tone = "") {
+  return `
+    <span class="context-chip${tone ? ` context-chip--${tone}` : ""}">
+      <span>${label}</span>
+      <strong>${value}</strong>
+    </span>
+  `;
+}
+
+function historyEventSummary(event) {
+  if (event.kind === "status") {
+    return `Status ${statusValueLabel(event.from)} → ${statusValueLabel(event.to)}`;
+  }
+  if (event.kind === "change") {
+    return `${purposeLabel(event.from)} → ${purposeLabel(event.to)}`;
+  }
+  return `Activated · ${purposeLabel(event.purpose)}`;
+}
+
 function statusLabel(stock) {
   const status = stockStatus(stock);
   const iconName = status.key === "ok" ? "check" : status.key === "low" ? "alert" : "close";
   return `<span class="status status--${status.key}">${icon(iconName)}${status.label}</span>`;
 }
 
-function stockTicks(stock, status) {
-  const filled = Math.max(0, Math.min(8, stock));
-  const tone = status.key === "out" ? " is-out" : status.key === "low" ? " is-low" : "";
-  const ticks = Array.from({ length: 8 }, (_, index) => `<span${index < filled ? ' class="on"' : ""}></span>`).join("");
-  return `<div class="stock-ticks${tone}" aria-hidden="true">${ticks}</div>`;
-}
-
-function typeCard(type, { large = false } = {}) {
+function typeCard(type) {
   const stock = db.stock[type.code] || 0;
   const status = stockStatus(stock);
   const typeYearColumns = columnsForType(type.code, ui.year);
   const activations = typeYearColumns.length;
-  const inactiveInType = typeYearColumns.filter((column) => columnStatus(column) === "inactive").length;
+  const activeCount = typeYearColumns.filter((column) => columnStatus(column) === "active").length;
   const last = latestActivationForType(type.code, ui.year);
-  const search = `${type.code} ${type.name} ${status.label} ${activations} ${last}`;
+  const cover = stockCoverForType(type.code);
+  const expected = expectedLifeForType(type.code);
+  const search = `${type.code} ${type.name} ${type.product} ${type.phase} ${typeDimensions(type)} ${status.label} ${activations} ${last}`;
 
   return `
-    <a class="type-card${large ? " type-card--large" : ""}"
+    <a class="type-card"
        href="#/types/${type.code}"
        data-filter-row
        data-type="${type.code}"
        data-stock="${status.key}"
+       data-stock-count="${stock}"
+       data-activations="${activations}"
+       data-cover="${cover.state === "out" ? 0 : cover.months ?? 999}"
        data-search="${esc(search)}">
       <div class="type-card-top">
         <span class="type-code">${type.code}</span>
         ${statusLabel(stock)}
       </div>
+
       <h3 class="type-name">${esc(type.name)}</h3>
-      ${large ? `<p class="type-sub">${activations} ${unitWord(activations, "activation")} in ${ui.year}${inactiveInType ? ` · ${inactiveInType} ${unitWord(inactiveInType, "inactive column", "inactive columns")}` : ""}</p>` : ""}
-      <div class="type-stock-row">
-        <div>
-          <span class="type-stock">${pad2(stock)}</span>
-          <span class="type-stock-label">not activated</span>
+      <p class="type-product">${esc(type.product)} · ${esc(type.phase)}</p>
+      <p class="type-dims">${esc(typeDimensions(type))}</p>
+
+      <div class="type-metrics">
+        <div class="type-metric type-metric--stock">
+          <span class="type-metric-value">${pad2(stock)}</span>
+          <span class="type-metric-label">in stock</span>
         </div>
-        <span class="type-activations"><strong>${activations}</strong>${unitWord(activations, "activation")} ${ui.year}</span>
+        <div class="type-metric">
+          <span class="type-metric-value">${activeCount}<span class="type-metric-of">/${activations}</span></span>
+          <span class="type-metric-label">active ${ui.year}</span>
+        </div>
+        <div class="type-metric">
+          <span class="type-metric-value">${expected.days ? `~${expected.days}` : "—"}</span>
+          <span class="type-metric-label">days est. life</span>
+        </div>
       </div>
-      ${stockTicks(stock, status)}
-      ${large ? `
-        <div class="type-card-foot">
-          <span>${last ? `Last ${formatDate(last)}` : "No activations yet"}</span>
-          ${icon("chevron-right")}
-        </div>
-      ` : ""}
+
+      <div class="type-card-foot">
+        <span>${last ? `Last ${formatDate(last)}` : "No activations yet"}</span>
+        <span class="type-cover">${formatCover(cover)} cover</span>
+        ${icon("chevron-right")}
+      </div>
     </a>
   `;
 }
@@ -795,34 +1145,73 @@ function renderDashboard() {
   const activeColumns = columns.filter((column) => columnStatus(column) === "active");
   const inactiveCount = columns.length - activeColumns.length;
   const stockTotal = totalStock();
-  const attention = TYPES.filter((type) => (db.stock[type.code] || 0) <= 2);
-  const outCount = TYPES.filter((type) => (db.stock[type.code] || 0) === 0).length;
-  const purposeCount = uniquePurposeCount(activeColumns);
-  const recent = [...columns].sort((a, b) => b.activatedAt.localeCompare(a.activatedAt) || b.seq - a.seq).slice(0, 6);
-
-  const monthlyCounts = Array.from({ length: 12 }, () => 0);
-  columns.forEach((column) => {
-    const date = parseISO(column.activatedAt);
-    if (date) monthlyCounts[date.getMonth()] += 1;
+  const outTypes = TYPES.filter((type) => (db.stock[type.code] || 0) === 0);
+  const lowTypes = TYPES.filter((type) => {
+    const stock = db.stock[type.code] || 0;
+    return stock > 0 && stock <= 2;
   });
+  const warnings = activeLifeWarnings(ui.year);
+  const due = warnings.filter((item) => item.life.state === "due");
+  const soon = warnings.filter((item) => item.life.state === "soon");
+  const purposeCount = uniquePurposeCount(activeColumns);
+
+  const monthlyCounts = monthlyCountsForYear();
+  const totalActivations = monthlyCounts.reduce((sum, count) => sum + count, 0);
+  const averagePerMonth = totalActivations / 12;
   const peakCount = Math.max(...monthlyCounts);
   const peakIndex = monthlyCounts.indexOf(peakCount);
-  const maxBar = Math.max(1, peakCount);
-  const chartBars = monthlyCounts.map((count, index) => {
-    const height = count === 0 ? 3 : Math.max(6, Math.round((count / maxBar) * 118));
-    return `
-      <div class="chart-col${index === new Date().getMonth() && ui.year === currentYear() ? " is-current" : ""}" title="${MONTHS_SHORT[index]}: ${count} ${unitWord(count, "activation")}">
-        <span class="chart-value">${count || ""}</span>
-        <span class="chart-bar" style="height:${height}px;--i:${index}"></span>
-        <span class="chart-month">${MONTHS_SHORT[index]}</span>
-      </div>
-    `;
-  }).join("");
+  const chartMax = niceChartMax(peakCount);
+  const chartBars = monthlyCounts.map((count, index) => `
+    <div class="chart-col${index === new Date().getMonth() && ui.year === currentYear() ? " is-current" : ""}" title="${MONTHS_SHORT[index]}: ${count} ${unitWord(count, "activation")}">
+      <span class="chart-value">${count || ""}</span>
+      <span class="chart-bar-wrap"><span class="chart-bar" style="height:${Math.max(count ? 5 : 1, Math.round((count / chartMax) * 100))}%;--i:${index}"></span></span>
+    </div>
+  `).join("");
+  const yLabels = [1, 0.75, 0.5, 0.25, 0].map((ratio) => `<span>${Math.round(chartMax * ratio)}</span>`).join("");
   const monthlySummary = monthlyCounts.map((count, index) => `${MONTHS_SHORT[index]} ${count}`).join(", ");
+
+  const now = new Date();
+  const isCurrentYear = ui.year === currentYear();
+  const thisMonth = isCurrentYear ? monthlyCounts[now.getMonth()] : 0;
+  const previousMonthIndex = now.getMonth() - 1;
+  const previousMonth = isCurrentYear && previousMonthIndex >= 0 ? monthlyCounts[previousMonthIndex] : null;
+  const monthDelta = previousMonth === null ? null : thisMonth - previousMonth;
+
+  const runway = TYPES.map((type) => ({
+    type,
+    stock: db.stock[type.code] || 0,
+    cover: stockCoverForType(type.code),
+    burn: burnRateForType(type.code),
+    lastAdjustment: lastStockAdjustment(type.code)
+  })).sort((a, b) => {
+    const urgency = (item) => item.cover.state === "out" ? -1 : item.cover.months ?? 999;
+    return urgency(a) - urgency(b) || a.type.code.localeCompare(b.type.code);
+  });
+
+  const recentEvents = allHistoryEvents(ui.year).slice(0, 6);
+  const recentMovements = [...(db.stockMovements || [])]
+    .sort((a, b) => String(b.at).localeCompare(String(a.at)) || String(b.createdAt || "").localeCompare(String(a.createdAt || "")))
+    .slice(0, 4);
+
+  const ledeParts = [];
+  ledeParts.push(outTypes.length
+    ? `<strong>${outTypes.length} ${unitWord(outTypes.length, "type")} out of stock</strong>`
+    : "All types are in stock");
+  ledeParts.push(due.length
+    ? `<strong>${due.length} active ${unitWord(due.length, "column")} past expected life</strong>`
+    : "no active column is past expected life");
+  const lede = `${ledeParts[0]}, and ${ledeParts[1]}.`;
 
   return `
     <div class="page">
-      <h1 class="sr-only">HPLC column overview</h1>
+      <h1 class="sr-only">HPLC column operations overview</h1>
+
+      ${viewIntro("Operations", lede, [
+        contextChip("As of", formatDate(todayISO())),
+        contextChip("Cycle", String(ui.year)),
+        contextChip("Stock", `${stockTotal} ${unitWord(stockTotal, "column")}`),
+        ui.year > 2000 ? contextChip(`${ui.year - 1}`, `${columnsForYear(ui.year - 1).length} activations`) : ""
+      ])}
 
       <div class="kpi-grid">
         <a class="kpi kpi--feature kpi--link" href="#/stock">
@@ -832,7 +1221,7 @@ function renderDashboard() {
           </div>
           <div>
             <div class="kpi-value">${counterHTML(stockTotal)}<span class="kpi-unit">${unitWord(stockTotal, "column")}</span></div>
-            <p class="kpi-note"><span class="kpi-dot" aria-hidden="true"></span>${attention.length} ${attention.length === 1 ? "type needs" : "types need"} attention</p>
+            <p class="kpi-note"><span class="kpi-dot" aria-hidden="true"></span>${outTypes.length} out · ${lowTypes.length} low</p>
           </div>
           <svg class="kpi-trace" viewBox="0 0 220 80" preserveAspectRatio="none" aria-hidden="true">
             <path d="M0 67H28l7-10 8 10h17l8-31 9 31h18l9-20 8 20h24l8-44 9 44h21l7-13 8 13H220"/>
@@ -842,11 +1231,24 @@ function renderDashboard() {
 
         <a class="kpi kpi--link" href="#/activations">
           <div class="kpi-top">
-            <span class="kpi-label">Activations ${ui.year}</span>
+            <span class="kpi-label">Due for replacement</span>
+            <span class="kpi-icon" aria-hidden="true">${icon("alert")}</span>
+          </div>
+          <div class="kpi-value">${counterHTML(due.length)}<span class="kpi-unit">${unitWord(due.length, "column")}</span></div>
+          <p class="kpi-note">${soon.length} due soon · ${activeColumns.length} active</p>
+        </a>
+
+        <a class="kpi kpi--link" href="#/activations">
+          <div class="kpi-top">
+            <span class="kpi-label">${isCurrentYear ? "Activations this month" : `Peak month ${ui.year}`}</span>
             <span class="kpi-icon" aria-hidden="true">${icon("activity")}</span>
           </div>
-          <div class="kpi-value">${counterHTML(columns.length)}<span class="kpi-unit">${unitWord(columns.length, "column")}</span></div>
-          <p class="kpi-note"><span class="status status--ok">${icon("check")}${ui.year}</span> ${ui.year === currentYear() ? "cycle in progress" : "archive year"}</p>
+          <div class="kpi-value">${counterHTML(isCurrentYear ? thisMonth : peakCount)}<span class="kpi-unit">${unitWord(isCurrentYear ? thisMonth : peakCount, "column")}</span></div>
+          <p class="kpi-note">${isCurrentYear
+            ? (monthDelta === null
+              ? `Peak ${peakCount ? `${MONTHS_SHORT[peakIndex]} · ${peakCount}` : "none yet"}`
+              : `${monthDelta >= 0 ? "+" : ""}${monthDelta} vs ${MONTHS_SHORT[previousMonthIndex]}`)
+            : (peakCount ? `${MONTHS_SHORT[peakIndex]} · ${peakCount} of ${totalActivations}` : "No activations")}</p>
         </a>
 
         <a class="kpi kpi--link" href="#/activations">
@@ -855,35 +1257,93 @@ function renderDashboard() {
             <span class="kpi-icon" aria-hidden="true">${icon("column")}</span>
           </div>
           <div class="kpi-value">${counterHTML(activeColumns.length)}<span class="kpi-unit">${unitWord(activeColumns.length, "column")}</span></div>
-          <p class="kpi-note">${inactiveCount} inactive</p>
-        </a>
-
-        <a class="kpi kpi--link" href="#/activations">
-          <div class="kpi-top">
-            <span class="kpi-label">Active purposes</span>
-            <span class="kpi-icon" aria-hidden="true">${icon("flask")}</span>
-          </div>
-          <div class="kpi-value">${counterHTML(purposeCount)}<span class="kpi-unit">of ${PURPOSES.length}</span></div>
-          <p class="kpi-note">Methods in use in ${ui.year}</p>
+          <p class="kpi-note">${purposeCount} active purposes · ${inactiveCount} inactive</p>
         </a>
       </div>
 
-      <section class="section">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">Inventory</p>
-            <h2>Stock by column type</h2>
-            <p class="section-note">${stockTotal} ${unitWord(stockTotal, "column")} not activated${outCount ? ` · ${outCount} ${unitWord(outCount, "type")} out of stock` : ""}</p>
+      <div class="dashboard-grid">
+        <section class="panel ops-span-7">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">Stock runway</h2>
+              <p class="panel-sub">Current stock against the current burn rate, most urgent first</p>
+            </div>
+            <a class="text-link" href="#/stock">Manage stock ${icon("chevron-right")}</a>
           </div>
-          <a class="text-link" href="#/stock">Manage stock ${icon("chevron-right")}</a>
-        </div>
-        <div class="stock-grid">
-          ${TYPES.map((type) => typeCard(type)).join("")}
-        </div>
-      </section>
+          <div class="table-wrap">
+            <table class="data-table data-table--responsive runway-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Stock</th>
+                  <th>Burn / mo</th>
+                  <th>Cover</th>
+                  <th>Out by</th>
+                  <th class="cell-actions"><span class="sr-only">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${runway.map(({ type, stock, cover, burn }) => {
+                  const tone = cover.state === "out" ? "out" : cover.months !== null && cover.months < 2 ? "low" : cover.months !== null && cover.months < 4 ? "watch" : "ok";
+                  return `
+                    <tr${cover.state === "out" ? ' class="is-critical"' : ""}>
+                      <td data-label="Type">
+                        <a class="stock-type-cell usage-type-link" href="#/types/${type.code}">
+                          <span class="type-code">${type.code}</span>
+                          <span><strong>${esc(type.name)}</strong><small>${esc(typeDimensionsShort(type))}</small></span>
+                        </a>
+                      </td>
+                      <td data-label="Stock"><span class="stock-value">${pad2(stock)}</span></td>
+                      <td data-label="Burn / mo"><span class="cell-date">${burn > 0 ? burn.toFixed(1) : "0"}</span></td>
+                      <td data-label="Cover"><span class="cover-chip cover-chip--${tone}">${formatCover(cover)}</span></td>
+                      <td data-label="Out by"><span class="cell-date">${cover.state === "out" ? "Out now" : cover.projected ? formatMonthYear(cover.projected) : "—"}</span></td>
+                      <td class="cell-actions">
+                        <button class="btn btn-secondary btn-sm" type="button" data-action="adjust-stock" data-type="${type.code}">Adjust</button>
+                      </td>
+                    </tr>
+                  `;
+                }).join("")}
+              </tbody>
+            </table>
+          </div>
+          <div class="table-foot">
+            <span>Cover = stock ÷ activations per month</span>
+            <span>${outTypes.length} out · ${lowTypes.length} low</span>
+          </div>
+        </section>
 
-      <div class="dashboard-lower">
-        <section class="panel">
+        <section class="panel ops-span-5">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">Replacement watch</h2>
+              <p class="panel-sub">Active columns by remaining estimated life</p>
+            </div>
+            <span class="panel-badge">${warnings.length}</span>
+          </div>
+          <div class="panel-body panel-body--tight">
+            ${warnings.length ? `
+              <div class="watch-list">
+                ${warnings.map(({ column, life }) => `
+                  <button class="watch-row" type="button" data-action="open-column" data-id="${column.id}">
+                    <span class="watch-main">
+                      <span class="cell-code">${columnCode(column)}</span>
+                      <span class="cell-sub">${esc(typeByCode(column.type)?.name || column.type)} · ${formatDaysShort(life.days)} in service · ~${life.expected.days} d expected</span>
+                    </span>
+                    ${lifeBadge(life)}
+                  </button>
+                `).join("")}
+              </div>
+              <div class="watch-foot">
+                <span>${due.length} past life · ${soon.length} within 15%</span>
+                <a class="text-link" href="#/activations">View all ${icon("chevron-right")}</a>
+              </div>
+            ` : `
+              <div class="side-note"><strong>No active column needs replacement.</strong> All columns are within their estimated service life.</div>
+            `}
+          </div>
+        </section>
+
+        <section class="panel ops-span-7">
           <div class="panel-head">
             <div>
               <h2 class="panel-title">Activations per month</h2>
@@ -891,96 +1351,53 @@ function renderDashboard() {
             </div>
             <div class="panel-head-actions">
               <a class="text-link" href="#/usage">View usage ${icon("chevron-right")}</a>
-              <span class="panel-badge">${columns.length} total</span>
+              <span class="panel-badge">${totalActivations} total</span>
             </div>
           </div>
           <div class="panel-body">
             <div class="chart" role="img" aria-label="Activations per month in ${ui.year}: ${monthlySummary}">
-              <div class="chart-lines" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-              <div class="chart-bars">${chartBars}</div>
+              <div class="chart-y" aria-hidden="true">${yLabels}</div>
+              <div class="chart-plot" aria-hidden="true">
+                <div class="chart-grid-lines"><span></span><span></span><span></span><span></span><span></span></div>
+                <div class="chart-avg" style="bottom:${Math.min(96, (averagePerMonth / chartMax) * 100)}%"><span>avg ${averagePerMonth.toFixed(1)}</span></div>
+                <div class="chart-bars">${chartBars}</div>
+              </div>
             </div>
+            <div class="chart-months" aria-hidden="true">${MONTHS_SHORT.map((month) => `<span>${month}</span>`).join("")}</div>
             <div class="chart-foot">
               <span>Busiest month <strong>${peakCount ? `${MONTHS_SHORT[peakIndex]} · ${peakCount} ${unitWord(peakCount, "activation")}` : "none yet"}</strong></span>
-              <span>Total <strong>${columns.length}</strong></span>
+              <span>Average <strong>${averagePerMonth.toFixed(1)}/mo</strong></span>
             </div>
           </div>
         </section>
 
-        <section class="panel">
+        <section class="panel ops-span-5">
           <div class="panel-head">
             <div>
-              <h2 class="panel-title">Needs attention</h2>
-              <p class="panel-sub">Stock 0–2 columns</p>
+              <h2 class="panel-title">Recent activity</h2>
+              <p class="panel-sub">Latest registry events in ${ui.year}</p>
             </div>
-            <span class="panel-badge">${attention.length}</span>
+            <a class="text-link" href="#/history">History ${icon("chevron-right")}</a>
           </div>
-          <div class="panel-body">
-            ${attention.length ? `
-              <div class="alert-list">
-                ${attention.map((type) => {
-                  const stock = db.stock[type.code] || 0;
-                  const status = stockStatus(stock);
-                  return `
-                    <a class="alert-row" href="#/stock" data-action="focus-stock" data-type="${type.code}">
-                      <span class="type-code">${type.code}</span>
-                      <span class="alert-name">${esc(type.name)}</span>
-                      <span class="stock-pill stock-pill--${status.key}">${stock} · ${status.label.toLowerCase()}</span>
-                      ${icon("chevron-right")}
-                    </a>
-                  `;
-                }).join("")}
+          <div class="panel-body panel-body--tight">
+            ${recentEvents.length ? `
+              <div class="activity-list">
+                ${recentEvents.map((event) => `
+                  <button class="activity-row" type="button" data-action="open-column" data-id="${event.column.id}">
+                    <span class="activity-dot activity-dot--${event.kind}" aria-hidden="true"></span>
+                    <span class="activity-main">
+                      <span class="cell-code">${columnCode(event.column)}</span>
+                      <span class="cell-sub">${esc(historyEventSummary(event))}</span>
+                    </span>
+                    <span class="activity-date">${formatShortDate(event.at)}</span>
+                  </button>
+                `).join("")}
               </div>
-              <div class="alert-foot">
-                <a class="text-link" href="#/stock">Open stock page ${icon("chevron-right")}</a>
-              </div>
-            ` : `
-              <div class="side-note"><strong>All stock levels are healthy.</strong> No column types have 0–2 stock.</div>
-            `}
+            ` : `<div class="side-note">No activity recorded in ${ui.year} yet.</div>`}
           </div>
         </section>
-      </div>
 
-      <div class="dashboard-lower dashboard-lower--balanced">
-        <section class="panel">
-          <div class="panel-head">
-            <div>
-              <h2 class="panel-title">Recent activations</h2>
-              <p class="panel-sub">Columns last opened in ${ui.year}</p>
-            </div>
-            <a class="text-link" href="#/activations">View all ${icon("chevron-right")}</a>
-          </div>
-          ${recent.length ? `
-            <div class="table-wrap">
-              <table class="data-table data-table--responsive">
-                <thead>
-                  <tr>
-                    <th>Column code</th>
-                    <th>Purpose</th>
-                    <th>Activation date</th>
-                    <th><span class="sr-only">Actions</span></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${recent.map((column) => `
-                    <tr>
-                      <td data-label="Column code">
-                        <button class="link-button cell-code" type="button" data-action="open-column" data-id="${column.id}">${columnCode(column)}</button>
-                        <span class="cell-sub">${esc(typeByCode(column.type)?.name || column.type)} · ${columnStatusBadge(column)}</span>
-                      </td>
-                      <td data-label="Purpose"><span class="purpose-badge">${esc(purposeLabel(column.purpose))}</span></td>
-                      <td data-label="Date"><span class="cell-date">${formatDate(column.activatedAt)}</span></td>
-                      <td class="cell-actions">
-                        <button class="icon-btn" type="button" data-action="open-column" data-id="${column.id}" aria-label="Open details for ${columnCode(column)}">${icon("chevron-right")}</button>
-                      </td>
-                    </tr>
-                  `).join("")}
-                </tbody>
-              </table>
-            </div>
-          ` : emptyState("activity", "No activations yet", `Add the first column for ${ui.year}.`, `<button class="btn btn-primary" type="button" data-action="add-column">${icon("plus")}Add activation</button>`)}
-        </section>
-
-        <section class="panel">
+        <section class="panel ops-span-5">
           <div class="panel-head">
             <div>
               <h2 class="panel-title">Top purposes</h2>
@@ -988,8 +1405,35 @@ function renderDashboard() {
             </div>
             <span class="panel-badge">${purposeCount}/${PURPOSES.length}</span>
           </div>
-          <div class="panel-body">
-            ${purposeList(activeColumns)}
+          <div class="panel-body">${purposeList(activeColumns)}</div>
+        </section>
+
+        <section class="panel ops-span-7">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">Latest stock adjustments</h2>
+              <p class="panel-sub">Manual changes with required remarks</p>
+            </div>
+            <a class="text-link" href="#/stock">Stock log ${icon("chevron-right")}</a>
+          </div>
+          <div class="panel-body panel-body--tight">
+            ${recentMovements.length ? `
+              <div class="movement-list">
+                ${recentMovements.map((movement) => {
+                  const type = typeByCode(movement.type);
+                  return `
+                    <button class="movement-row" type="button" data-action="adjust-stock" data-type="${movement.type}">
+                      <span class="movement-delta ${movement.delta > 0 ? "is-add" : "is-reduce"}">${movement.delta > 0 ? "+" : ""}${movement.delta}</span>
+                      <span class="movement-main">
+                        <strong>${movement.type} · ${esc(type?.name || movement.type)}</strong>
+                        <small>${esc(movement.note)}</small>
+                      </span>
+                      <span class="movement-date">${formatShortDate(movement.at)}</span>
+                    </button>
+                  `;
+                }).join("")}
+              </div>
+            ` : `<div class="side-note">No manual stock adjustments recorded yet.</div>`}
           </div>
         </section>
       </div>
@@ -1003,26 +1447,47 @@ function renderDashboard() {
 
 function renderTypes() {
   const stockTotal = totalStock();
-  const attention = TYPES.filter((type) => (db.stock[type.code] || 0) <= 2).length;
+  const low = TYPES.filter((type) => {
+    const stock = db.stock[type.code] || 0;
+    return stock > 0 && stock <= 2;
+  }).length;
   const out = TYPES.filter((type) => (db.stock[type.code] || 0) === 0).length;
   const activations = columnsForYear().length;
+  const active = columnsForYear().filter((column) => columnStatus(column) === "active").length;
+  const due = activeLifeWarnings(ui.year).filter((item) => item.life.state === "due").length;
 
   return `
     <div class="page">
       <h1 class="sr-only">Column types</h1>
+
+      ${viewIntro(
+        "Inventory catalog",
+        `${TYPES.length} column types, ${out} out of stock and ${low} low. ${due ? `<strong>${due} active ${unitWord(due, "column")} need replacement.</strong>` : "No active column is past expected life."}`,
+        [
+          contextChip("Dimensions", "Length × ID · particle · pore"),
+          contextChip("Stock", `${stockTotal} ${unitWord(stockTotal, "column")}`),
+          contextChip("In use", `${active} ${unitWord(active, "column")}`)
+        ]
+      )}
 
       <div data-filter-scope>
         <div class="toolbar">
           <label class="search-field">
             <span class="sr-only">Search column types</span>
             ${icon("search")}
-            <input type="search" data-filter="search" placeholder="Search type or column code…" autocomplete="off">
+            <input type="search" data-filter="search" placeholder="Search type, product, or dimension…" autocomplete="off">
           </label>
           <select class="select-control" data-filter="stock" aria-label="Filter by stock status">
             <option value="">All stock statuses</option>
             <option value="ok">Available</option>
             <option value="low">Low</option>
             <option value="out">Out</option>
+          </select>
+          <select class="select-control" data-sort aria-label="Sort column types">
+            <option value="type">Type A–Z</option>
+            <option value="stock-asc">Stock low to high</option>
+            <option value="activations-desc">Most activations</option>
+            <option value="cover-asc">Shortest cover</option>
           </select>
           <span class="spacer"></span>
           <a class="btn btn-secondary" href="#/stock">${icon("archive")}Manage stock</a>
@@ -1032,13 +1497,13 @@ function renderTypes() {
         <div class="stock-summary" aria-label="Inventory summary">
           <span class="stock-summary-chip">${icon("archive")} Total stock <strong>${stockTotal}</strong></span>
           <span class="stock-summary-chip">${icon("activity")} Activations ${ui.year} <strong>${activations}</strong></span>
-          <span class="stock-summary-chip">${icon("alert")} Needs attention <strong>${attention}</strong></span>
+          <span class="stock-summary-chip">${icon("alert")} Due replacement <strong>${due}</strong></span>
           <span class="stock-summary-chip">${icon("close")} Out <strong>${out}</strong></span>
         </div>
 
         <h2 class="sr-only">Column type list</h2>
-        <div class="type-grid">
-          ${TYPES.map((type) => typeCard(type, { large: true })).join("")}
+        <div class="type-grid" data-filter-table>
+          ${TYPES.map((type) => typeCard(type)).join("")}
         </div>
 
         <div class="empty-state" data-filter-empty hidden>
@@ -1046,6 +1511,11 @@ function renderTypes() {
           <h3>No matching types</h3>
           <p>Try another keyword or change the stock status filter.</p>
         </div>
+
+        <p class="spec-note">
+          ${icon("column")}
+          <span>Dimensions are typical manufacturer specifications for each product line. Confirm length, internal diameter, particle size, and pore size against the label on the physical column before use.</span>
+        </p>
       </div>
     </div>
   `;
@@ -1068,8 +1538,16 @@ function renderTypeDetail(code) {
   const last = latestActivationForType(type.code, ui.year);
   const changes = yearColumns.reduce((sum, column) => sum + column.history.filter((event) => event.kind !== "activation").length, 0);
   const totalStockAllTypes = totalStock();
+  const expected = expectedLifeForType(type.code);
+  const cover = stockCoverForType(type.code);
+  const warnings = activeYearColumns
+    .map((column) => ({ column, life: lifecycleFor(column) }))
+    .filter((item) => item.life.state === "due" || item.life.state === "soon");
+  const dueCount = warnings.filter((item) => item.life.state === "due").length;
+  const averageActiveAge = average(activeYearColumns.map(serviceDays));
 
   const rows = yearColumns.map((column) => {
+    const life = lifecycleFor(column);
     const lastUpdate = [...column.history]
       .filter((event) => event.kind !== "activation")
       .sort((a, b) => {
@@ -1082,20 +1560,27 @@ function renderTypeDetail(code) {
         ? `${statusValueLabel(lastUpdate.from)} ${statusValueLabel(lastUpdate.to)}`
         : `${purposeLabel(lastUpdate.from)} ${purposeLabel(lastUpdate.to)}`)
       : "";
-    const search = `${columnCode(column)} ${type.name} ${purposeLabel(column.purpose)} ${column.activatedAt} ${columnStatusLabel(column)} ${updateText}`;
+    const search = `${columnCode(column)} ${type.name} ${type.product} ${purposeLabel(column.purpose)} ${column.activatedAt} ${columnStatusLabel(column)} ${updateText}`;
 
     return `
-      <tr data-filter-row data-search="${esc(search)}" data-type="${column.type}" data-purpose="${column.purpose}" data-status="${columnStatus(column)}">
+      <tr data-filter-row data-search="${esc(search)}" data-type="${column.type}" data-purpose="${column.purpose}" data-status="${columnStatus(column)}" data-life="${life.state}">
         <td data-label="Column code">
           <button class="link-button cell-code" type="button" data-action="open-column" data-id="${column.id}">${columnCode(column)}</button>
-          <span class="cell-sub">Sequence ${column.seq} in ${column.year}</span>
+          <span class="cell-sub">Seq ${column.seq} · ${column.year}</span>
         </td>
         <td data-label="Purpose">
           <span class="purpose-badge">${esc(purposeLabel(column.purpose))}</span>
           ${lastUpdate ? `<span class="cell-sub">Updated ${formatDate(lastUpdate.at)}</span>` : ""}
         </td>
         <td data-label="Status">${columnStatusBadge(column)}</td>
-        <td data-label="Activation date"><span class="cell-date">${formatDate(column.activatedAt)}</span></td>
+        <td data-label="Activated">
+          <span class="cell-date">${formatDate(column.activatedAt)}</span>
+          <span class="cell-sub">${formatDaysShort(life.days)} in service</span>
+        </td>
+        <td data-label="Life">
+          <span class="life-value${life.state === "due" ? " is-due" : life.state === "soon" ? " is-soon" : ""}">${lifeRemainingText(life)}</span>
+          <span class="cell-sub">${life.state === "retired" ? `retired ${formatDate(column.statusChangedAt)}` : life.state === "unknown" ? "no estimate" : `of ~${life.expected.days} d`}</span>
+        </td>
         <td class="cell-actions" data-label="Actions">
           <button class="btn btn-secondary btn-sm" type="button" data-action="change-purpose" data-id="${column.id}">Change</button>
           <button class="icon-btn" type="button" data-action="open-column" data-id="${column.id}" aria-label="Details for ${columnCode(column)}">${icon("chevron-right")}</button>
@@ -1111,12 +1596,18 @@ function renderTypeDetail(code) {
       <section class="detail-hero">
         <div class="detail-code" aria-hidden="true">${type.code}</div>
         <div class="detail-title">
-          <p class="eyebrow">Column type · code ${type.code}</p>
+          <p class="eyebrow">Column type ${type.code} · ${esc(type.phase)}</p>
           <h1>${esc(type.name)}</h1>
+          <p class="detail-product">${esc(type.product)} · ${esc(type.supplier)}</p>
+          <div class="spec-inline">
+            <span class="spec-pill">${type.dimensions.length} × ${type.dimensions.diameter} mm</span>
+            <span class="spec-pill">${type.dimensions.particle} µm particle</span>
+            <span class="spec-pill">${type.dimensions.pore} Å pore</span>
+            <span class="spec-pill">${esc(type.phase)} phase</span>
+          </div>
           <div class="detail-meta">
             <span>${allColumns.length} ${unitWord(allColumns.length, "column")} registered</span>
             <span>${yearColumns.length} ${unitWord(yearColumns.length, "activation")} in ${ui.year}</span>
-            <span>${activeYearColumns.length} active · ${inactiveYearCount} inactive</span>
             <span>${last ? `Last ${formatDate(last)}` : "No activations yet"}</span>
           </div>
         </div>
@@ -1127,12 +1618,16 @@ function renderTypeDetail(code) {
               <span class="detail-stat-value${status.key === "out" ? " is-out" : status.key === "low" ? " is-low" : ""}">${pad2(stock)}</span>
             </div>
             <div class="detail-stat">
-              <span class="detail-stat-label">Activations</span>
-              <span class="detail-stat-value">${yearColumns.length}</span>
+              <span class="detail-stat-label">Active</span>
+              <span class="detail-stat-value">${activeYearColumns.length}</span>
             </div>
             <div class="detail-stat">
-              <span class="detail-stat-label">Changed</span>
-              <span class="detail-stat-value">${changes}</span>
+              <span class="detail-stat-label">Due</span>
+              <span class="detail-stat-value${dueCount ? " is-out" : ""}">${dueCount}</span>
+            </div>
+            <div class="detail-stat">
+              <span class="detail-stat-label">Avg. life</span>
+              <span class="detail-stat-value">${expected.days ? `~${expected.days}` : "—"}</span>
             </div>
           </div>
           <div class="detail-actions">
@@ -1147,7 +1642,7 @@ function renderTypeDetail(code) {
           <div class="panel-head">
             <div>
               <h2 class="panel-title">Activated columns ${ui.year}</h2>
-              <p class="panel-sub">Code, active purpose, and activation date</p>
+              <p class="panel-sub">Life remaining is estimated from retired columns of the same type, or all types when the sample is small</p>
             </div>
           </div>
 
@@ -1156,11 +1651,13 @@ function renderTypeDetail(code) {
               <button class="table-tab is-active" type="button" data-status-tab="" aria-pressed="true">All <span>${yearColumns.length}</span></button>
               <button class="table-tab" type="button" data-status-tab="active" aria-pressed="false">Active <span>${activeYearColumns.length}</span></button>
               <button class="table-tab" type="button" data-status-tab="inactive" aria-pressed="false">Inactive <span>${inactiveYearCount}</span></button>
+              <span class="table-tabs-spacer"></span>
+              <span class="table-tabs-note">${dueCount} due · ${warnings.length - dueCount} soon</span>
             </div>
             <input type="hidden" data-filter="status" value="">
 
-            <div class="panel-body" style="padding-bottom:12px">
-              <div class="toolbar" style="margin-bottom:0">
+            <div class="panel-body toolbar-row">
+              <div class="toolbar">
                 <label class="search-field">
                   <span class="sr-only">Search ${esc(type.name)} columns</span>
                   ${icon("search")}
@@ -1170,17 +1667,25 @@ function renderTypeDetail(code) {
                   <option value="">All purposes</option>
                   ${PURPOSES.map((purpose) => `<option value="${purpose.id}">${esc(purpose.label)}</option>`).join("")}
                 </select>
+                <select class="select-control" data-filter="life" aria-label="Filter by life stage">
+                  <option value="">All life stages</option>
+                  <option value="due">Due for replacement</option>
+                  <option value="soon">Due soon</option>
+                  <option value="ok">On track</option>
+                  <option value="retired">Retired</option>
+                </select>
               </div>
             </div>
 
             <div class="table-wrap" data-filter-table>
-              <table class="data-table data-table--responsive">
+              <table class="data-table data-table--responsive type-detail-table">
                 <thead>
                   <tr>
                     <th>Column code</th>
                     <th>Purpose</th>
                     <th>Status</th>
-                    <th>Activation date</th>
+                    <th>Activated</th>
+                    <th>Life</th>
                     <th class="cell-actions"><span class="sr-only">Actions</span></th>
                   </tr>
                 </thead>
@@ -1190,11 +1695,11 @@ function renderTypeDetail(code) {
 
             <div class="table-foot">
               <span>Showing <strong data-filter-count>${yearColumns.length}</strong></span>
-              <span>Stock for this type: <strong>${stock}</strong></span>
+              <span>Stock for this type: <strong>${stock}</strong> · cover <strong>${formatCover(cover)}</strong></span>
             </div>
 
             <div data-filter-empty hidden>
-              ${emptyState("search", "No matching columns", "Try another code, purpose, or status.")}
+              ${emptyState("search", "No matching columns", "Try another code, purpose, status, or life stage.")}
             </div>
           ` : emptyState(
             "column",
@@ -1212,8 +1717,30 @@ function renderTypeDetail(code) {
           <section class="panel">
             <div class="panel-head">
               <div>
+                <h2 class="panel-title">Column specification</h2>
+                <p class="panel-sub">Typical manufacturer data for this product line</p>
+              </div>
+            </div>
+            <div class="panel-body">
+              <dl class="spec-list">
+                <div><dt>Product</dt><dd>${esc(type.product)}</dd></div>
+                <div><dt>Supplier</dt><dd>${esc(type.supplier)}</dd></div>
+                <div><dt>Length</dt><dd>${type.dimensions.length} mm</dd></div>
+                <div><dt>Internal diameter</dt><dd>${type.dimensions.diameter} mm</dd></div>
+                <div><dt>Particle size</dt><dd>${type.dimensions.particle} µm</dd></div>
+                <div><dt>Pore size</dt><dd>${type.dimensions.pore} Å</dd></div>
+                <div><dt>Phase</dt><dd>${esc(type.phase)}</dd></div>
+                <div><dt>Expected life</dt><dd>${expected.days ? `~${expected.days} d` : "—"} <span class="spec-sample">n=${expected.sample}</span></dd></div>
+              </dl>
+              <p class="spec-note">${icon("column")} Confirm against the label on the physical column. “Expected life” is the mean service life of retired columns, not a manufacturer rating.</p>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
                 <h2 class="panel-title">Type summary</h2>
-                <p class="panel-sub">Stock, activations, and history</p>
+                <p class="panel-sub">Stock, life, and change activity</p>
               </div>
             </div>
             <div class="panel-body" style="padding:13px">
@@ -1227,8 +1754,8 @@ function renderTypeDetail(code) {
                   <span class="mini-stat-value">${pad2(yearColumns.length)} <small>${unitWord(yearColumns.length, "column")}</small></span>
                 </div>
                 <div class="mini-stat">
-                  <span class="mini-stat-label">Total registered</span>
-                  <span class="mini-stat-value">${pad2(allColumns.length)} <small>${unitWord(allColumns.length, "column")}</small></span>
+                  <span class="mini-stat-label">Average active age</span>
+                  <span class="mini-stat-value">${averageActiveAge === null ? "—" : formatDaysShort(averageActiveAge)}</span>
                 </div>
                 <div class="mini-stat">
                   <span class="mini-stat-label">Changes ${ui.year}</span>
@@ -1267,19 +1794,40 @@ function renderActivations() {
   const columns = [...columnsForYear()].sort((a, b) => b.activatedAt.localeCompare(a.activatedAt) || b.seq - a.seq);
   const activeColumnCount = columns.filter((column) => columnStatus(column) === "active").length;
   const inactiveColumnCount = columns.length - activeColumnCount;
+  const warnings = activeLifeWarnings(ui.year);
+  const dueCount = warnings.filter((item) => item.life.state === "due").length;
+  const soonCount = warnings.length - dueCount;
+  const averageAge = average(columns.filter((column) => columnStatus(column) === "active").map(serviceDays));
 
   const rows = columns.map((column) => {
     const type = typeByCode(column.type);
-    const search = `${columnCode(column)} ${type?.name || ""} ${purposeLabel(column.purpose)} ${columnStatusLabel(column)} ${column.activatedAt} ${activationNote(column)}`;
+    const life = lifecycleFor(column);
+    const search = `${columnCode(column)} ${type?.name || ""} ${type?.product || ""} ${purposeLabel(column.purpose)} ${columnStatusLabel(column)} ${column.activatedAt} ${activationNote(column)}`;
     return `
-      <tr data-filter-row data-search="${esc(search)}" data-type="${column.type}" data-purpose="${column.purpose}" data-status="${columnStatus(column)}">
+      <tr data-filter-row
+          data-search="${esc(search)}"
+          data-type="${column.type}"
+          data-purpose="${column.purpose}"
+          data-status="${columnStatus(column)}"
+          data-life="${life.state}"
+          data-date="${column.activatedAt}"
+          data-code="${columnCode(column)}"
+          data-days="${life.days}">
         <td data-label="Column code">
           <button class="link-button cell-code" type="button" data-action="open-column" data-id="${column.id}">${columnCode(column)}</button>
-          <span class="cell-sub">${esc(type?.name || column.type)}</span>
+          <span class="cell-sub">${esc(type?.name || column.type)} · ${esc(typeDimensionsShort(type))}</span>
         </td>
         <td data-label="Purpose"><span class="purpose-badge">${esc(purposeLabel(column.purpose))}</span></td>
         <td data-label="Status">${columnStatusBadge(column)}</td>
         <td data-label="Activation date"><span class="cell-date">${formatDate(column.activatedAt)}</span></td>
+        <td data-label="In service">
+          <span class="life-value">${formatDaysShort(life.days)}</span>
+          <span class="cell-sub">${columnStatus(column) === "active" ? "to date" : "total life"}</span>
+        </td>
+        <td data-label="Life">
+          <span class="life-value${life.state === "due" ? " is-due" : life.state === "soon" ? " is-soon" : ""}">${lifeRemainingText(life)}</span>
+          <span class="cell-sub">${life.state === "retired" ? `retired ${formatDate(column.statusChangedAt)}` : life.state === "unknown" ? "no estimate" : `of ~${life.expected.days} d expected`}</span>
+        </td>
         <td class="cell-actions" data-label="Actions">
           <button class="btn btn-secondary btn-sm" type="button" data-action="change-purpose" data-id="${column.id}">Change</button>
           <button class="icon-btn" type="button" data-action="open-column" data-id="${column.id}" aria-label="Details for ${columnCode(column)}">${icon("chevron-right")}</button>
@@ -1291,6 +1839,17 @@ function renderActivations() {
   return `
     <div class="page">
       <h1 class="sr-only">Column activations</h1>
+
+      ${viewIntro(
+        "Activation register",
+        `${columns.length} ${unitWord(columns.length, "column")} activated in ${ui.year}, ${activeColumnCount} still in use. <strong>${dueCount} ${unitWord(dueCount, "column")} past expected life.</strong>`,
+        [
+          contextChip("Active", String(activeColumnCount)),
+          contextChip("Inactive", String(inactiveColumnCount)),
+          contextChip("Avg. active age", averageAge === null ? "—" : formatDaysShort(averageAge)),
+          contextChip("Due soon", String(soonCount), soonCount ? "warn" : "")
+        ]
+      )}
 
       <div class="info-banner">
         ${icon("flask")}
@@ -1312,7 +1871,7 @@ function renderActivations() {
           <label class="search-field">
             <span class="sr-only">Search activations</span>
             ${icon("search")}
-            <input type="search" data-filter="search" placeholder="Search code, type, or purpose…" autocomplete="off">
+            <input type="search" data-filter="search" placeholder="Search code or purpose…" autocomplete="off">
           </label>
           <select class="select-control" data-filter="type" aria-label="Filter by column type">
             <option value="">All types</option>
@@ -1322,6 +1881,19 @@ function renderActivations() {
             <option value="">All purposes</option>
             ${PURPOSES.map((purpose) => `<option value="${purpose.id}">${esc(purpose.label)}</option>`).join("")}
           </select>
+          <select class="select-control" data-filter="life" aria-label="Filter by life stage">
+            <option value="">All life stages</option>
+            <option value="due">Due for replacement</option>
+            <option value="soon">Due soon</option>
+            <option value="ok">On track</option>
+            <option value="retired">Retired</option>
+          </select>
+          <select class="select-control" data-sort aria-label="Sort activations">
+            <option value="date-desc">Newest first</option>
+            <option value="date-asc">Oldest first</option>
+            <option value="code-asc">Code A–Z</option>
+            <option value="days-desc">Longest in service</option>
+          </select>
           <span class="spacer"></span>
           <button class="btn btn-secondary" type="button" data-action="export-csv">${icon("download")}Export CSV</button>
         </div>
@@ -1330,7 +1902,7 @@ function renderActivations() {
           <div class="panel-head">
             <div>
               <h2 class="panel-title">Activated columns ${ui.year}</h2>
-              <p class="panel-sub">Click a code to view its purpose, status, and change history</p>
+              <p class="panel-sub">Click a code to view purpose, status, lifecycle, and change history</p>
             </div>
           </div>
 
@@ -1339,6 +1911,8 @@ function renderActivations() {
               <button class="table-tab is-active" type="button" data-status-tab="" aria-pressed="true">All <span>${columns.length}</span></button>
               <button class="table-tab" type="button" data-status-tab="active" aria-pressed="false">Active <span>${activeColumnCount}</span></button>
               <button class="table-tab" type="button" data-status-tab="inactive" aria-pressed="false">Inactive <span>${inactiveColumnCount}</span></button>
+              <span class="table-tabs-spacer"></span>
+              <span class="table-tabs-note">${dueCount} due · ${soonCount} soon</span>
             </div>
             <input type="hidden" data-filter="status" value="">
 
@@ -1349,7 +1923,9 @@ function renderActivations() {
                     <th>Column code</th>
                     <th>Purpose</th>
                     <th>Status</th>
-                    <th>Activation date</th>
+                    <th>Activated</th>
+                    <th>In service</th>
+                    <th>Life</th>
                     <th class="cell-actions"><span class="sr-only">Actions</span></th>
                   </tr>
                 </thead>
@@ -1358,10 +1934,10 @@ function renderActivations() {
             </div>
             <div class="table-foot">
               <span>Showing <strong data-filter-count>${columns.length}</strong></span>
-              <span>${ui.year} cycle</span>
+              <span>${ui.year} cycle · life estimates use retired columns</span>
             </div>
             <div data-filter-empty hidden>
-              ${emptyState("search", "No matching columns", "Try another keyword, purpose, or status.")}
+              ${emptyState("search", "No matching columns", "Try another keyword, purpose, status, or life stage.")}
             </div>
           ` : emptyState(
             "activity",
@@ -1381,21 +1957,39 @@ function renderActivations() {
 
 function renderHistory() {
   const events = allHistoryEvents(ui.year);
+  const activationCount = events.filter((event) => event.kind === "activation").length;
+  const changeCount = events.filter((event) => event.kind === "change").length;
+  const statusCount = events.filter((event) => event.kind === "status").length;
+  const latest = events[0];
 
   return `
     <div class="page">
       <h1 class="sr-only">Column history</h1>
 
+      ${viewIntro(
+        "Audit trail",
+        `${events.length} ${unitWord(events.length, "event")} in ${ui.year}: ${activationCount} activations, ${changeCount} purpose changes, ${statusCount} status changes.${latest ? ` <strong>Latest: ${columnCode(latest.column)} on ${formatDate(latest.at)}.</strong>` : ""}`,
+        [
+          contextChip("Activations", String(activationCount)),
+          contextChip("Purpose changes", String(changeCount)),
+          contextChip("Status changes", String(statusCount))
+        ]
+      )}
+
       <div data-filter-scope>
-        <div class="toolbar">
+        <div class="toolbar toolbar--history">
           <label class="search-field">
             <span class="sr-only">Search history</span>
             ${icon("search")}
-            <input type="search" data-filter="search" placeholder="Search code, type, or purpose…" autocomplete="off">
+            <input type="search" data-filter="search" placeholder="Search history…" autocomplete="off">
           </label>
           <select class="select-control" data-filter="type" aria-label="Filter by column type">
             <option value="">All types</option>
             ${TYPES.map((type) => `<option value="${type.code}">${type.code} — ${esc(type.name)}</option>`).join("")}
+          </select>
+          <select class="select-control" data-filter="purpose" aria-label="Filter by purpose">
+            <option value="">All purposes</option>
+            ${PURPOSES.map((purpose) => `<option value="${purpose.id}">${esc(purpose.label)}</option>`).join("")}
           </select>
           <select class="select-control" data-filter="kind" aria-label="Filter by history type">
             <option value="">All history</option>
@@ -1403,8 +1997,16 @@ function renderHistory() {
             <option value="change">Purpose change</option>
             <option value="status">Status change</option>
           </select>
-          <span class="spacer"></span>
-          <span class="section-note"><strong data-filter-count>${events.length}</strong> shown</span>
+          <select class="select-control" data-sort aria-label="Sort history">
+            <option value="date-desc">Newest first</option>
+            <option value="date-asc">Oldest first</option>
+          </select>
+          <label class="date-range">
+            <span class="date-range-label">Date</span>
+            <input class="input" type="date" data-filter="dateFrom" aria-label="History from date">
+            <span class="date-range-sep" aria-hidden="true">–</span>
+            <input class="input" type="date" data-filter="dateTo" aria-label="History to date">
+          </label>
         </div>
 
         ${events.length ? `
@@ -1414,15 +2016,20 @@ function renderHistory() {
                 <h2 class="panel-title">Activity log</h2>
                 <p class="panel-sub">Newest first · ${events.length} ${unitWord(events.length, "event")} in ${ui.year}</p>
               </div>
-              <span class="panel-badge">${ui.year}</span>
+              <div class="panel-head-actions">
+                <button class="btn btn-secondary btn-sm" type="button" data-action="export-history">${icon("download")}Export history</button>
+                <span class="panel-badge">${ui.year}</span>
+              </div>
             </div>
-            <div class="panel-body">
-              <div class="timeline" data-filter-table>
-                ${events.map((event) => historyEventHTML(event, event.column, { filterable: true, interactiveCode: true })).join("")}
-              </div>
-              <div data-filter-empty hidden>
-                ${emptyState("search", "No matching history", "Try another keyword or change the type filter.")}
-              </div>
+            <div class="history-list" data-filter-table>
+              ${events.map((event) => historyEventHTML(event, event.column, { filterable: true, interactiveCode: true })).join("")}
+            </div>
+            <div class="table-foot">
+              <span>Showing <strong data-filter-count>${events.length}</strong></span>
+              <span>Status changes and purpose changes keep their reason note</span>
+            </div>
+            <div data-filter-empty hidden>
+              ${emptyState("search", "No matching history", "Try another keyword, type, purpose, kind, or date range.")}
             </div>
           </section>
         ` : emptyState(
@@ -1443,7 +2050,7 @@ function historyEventHTML(event, column, { filterable = false, interactiveCode =
   const statusSearch = isStatus ? `${statusValueLabel(event.from)} ${statusValueLabel(event.to)}` : "";
   const search = `${columnCode(column)} ${type?.name || ""} ${purposeLabel(event.purpose || event.to)} ${event.from ? purposeLabel(event.from) : ""} ${statusSearch} ${event.note || ""} ${event.at}`;
   const filterAttrs = filterable
-    ? ` data-filter-row data-search="${esc(search)}" data-type="${column.type}" data-kind="${event.kind}"`
+    ? ` data-filter-row data-search="${esc(search)}" data-type="${column.type}" data-kind="${event.kind}" data-purpose="${esc(event.purpose || event.to || "")}" data-date="${event.at}"`
     : "";
 
   const codeMarkup = interactiveCode
@@ -1457,14 +2064,14 @@ function historyEventHTML(event, column, { filterable = false, interactiveCode =
       : `Activated for <strong>${esc(purposeLabel(event.purpose))}</strong>.`;
 
   return `
-    <article class="timeline-event${isChange ? " timeline-event--change" : ""}${isStatus ? " timeline-event--status" : ""}"${filterAttrs}>
-      <div class="timeline-event-head">
-        ${codeMarkup}
-        <span class="timeline-event-kind">${isStatus ? "Status" : isChange ? "Change" : "Activation"}</span>
-        <span class="timeline-event-date">${formatDate(event.at)}</span>
-      </div>
-      <p class="timeline-event-body">${body}</p>
-      ${event.note ? `<p class="timeline-event-note">${esc(event.note)}</p>` : ""}
+    <article class="history-row${isChange ? " history-row--change" : ""}${isStatus ? " history-row--status" : ""}"${filterAttrs}>
+      <span class="history-date">${formatDate(event.at)}</span>
+      <span class="history-code">${codeMarkup}<span class="cell-sub">${esc(type?.name || column.type)}</span></span>
+      <span class="history-body">
+        <span class="history-text">${body}</span>
+        ${event.note ? `<span class="history-note">${esc(event.note)}</span>` : ""}
+      </span>
+      <span class="timeline-event-kind">${isStatus ? "Status" : isChange ? "Change" : "Activation"}</span>
     </article>
   `;
 }
@@ -1475,45 +2082,73 @@ function historyEventHTML(event, column, { filterable = false, interactiveCode =
 
 function renderStock() {
   const total = totalStock();
-  const low = TYPES.filter((type) => {
-    const status = stockStatus(db.stock[type.code] || 0);
-    return status.key === "low" || status.key === "out";
-  }).length;
   const out = TYPES.filter((type) => (db.stock[type.code] || 0) === 0).length;
-  const activations = columnsForYear().length;
+  const low = TYPES.filter((type) => {
+    const stock = db.stock[type.code] || 0;
+    return stock > 0 && stock <= 2;
+  }).length;
+  const due = activeLifeWarnings(ui.year).filter((item) => item.life.state === "due").length;
   const stockMovements = [...(db.stockMovements || [])].sort((a, b) => {
     const byDate = String(b.at).localeCompare(String(a.at));
     if (byDate !== 0) return byDate;
     return String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
   });
-
+  const maxCover = Math.max(...TYPES.map((type) => stockCoverForType(type.code).months || 0), 1);
+  const shortestCover = TYPES
+    .filter((type) => (db.stock[type.code] || 0) > 0)
+    .map((type) => ({ type, cover: stockCoverForType(type.code) }))
+    .filter((item) => item.cover.months !== null)
+    .sort((a, b) => a.cover.months - b.cover.months)[0] || null;
   const rows = TYPES.map((type) => {
     const stock = db.stock[type.code] || 0;
     const status = stockStatus(stock);
-    const last = latestActivationForType(type.code, ui.year);
-    const activationsForType = columnsForType(type.code, ui.year).length;
-    const meterWidth = Math.min(100, Math.round((stock / 8) * 100));
+    const cover = stockCoverForType(type.code);
+    const burn = burnRateForType(type.code);
+    const lastAdjustment = lastStockAdjustment(type.code);
     const next = nextCode(type.code, ui.year);
     const isFocus = ui.stockFocus === type.code;
+    const tone = cover.state === "out" ? "out" : cover.months !== null && cover.months < 2 ? "low" : cover.months !== null && cover.months < 4 ? "watch" : "ok";
+    const meterWidth = cover.months === null ? 0 : Math.min(100, Math.round((cover.months / Math.max(6, Math.min(24, maxCover))) * 100));
 
     return `
-      <tr class="stock-row${isFocus ? " is-focus" : ""}">
+      <tr class="stock-row${isFocus ? " is-focus" : ""}${cover.state === "out" ? " is-critical" : ""}"
+          data-sort-row
+          data-type="${type.code}"
+          data-stock="${stock}"
+          data-cover="${cover.state === "out" ? 0 : cover.months ?? 999}">
         <td data-label="Column type">
           <div class="stock-type-cell">
             <span class="type-code">${type.code}</span>
             <span>
               <strong>${esc(type.name)}</strong>
-              <small>Next ${next}</small>
+              <small>${esc(typeDimensions(type))}</small>
             </span>
           </div>
         </td>
-        <td data-label="Current stock"><span class="stock-value">${pad2(stock)}</span></td>
-        <td data-label="Level">
-          <div class="stock-meter${status.key === "out" ? " is-out" : status.key === "low" ? " is-low" : ""}" aria-hidden="true"><span style="width:${meterWidth}%"></span></div>
+        <td data-label="Current stock">
+          <span class="stock-value">${pad2(stock)}</span>
+          <span class="cell-sub">${lastAdjustment ? `Adjusted ${formatShortDate(lastAdjustment.at)}` : "No adjustment"}</span>
         </td>
-        <td data-label="Status">${statusLabel(stock)}</td>
-        <td data-label="Activations ${ui.year}"><span class="cell-date">${activationsForType}</span></td>
-        <td data-label="Last"><span class="cell-date">${last ? formatDate(last) : "—"}</span></td>
+        <td data-label="Burn / month">
+          <span class="life-value">${burn > 0 ? burn.toFixed(1) : "0"}</span>
+          <span class="cell-sub">${columnsForType(type.code, currentYear()).length} in ${currentYear()}</span>
+        </td>
+        <td data-label="Cover">
+          <div class="cover-cell">
+            <span class="cover-chip cover-chip--${tone}">${formatCover(cover)}</span>
+            <span class="cover-meter"><span style="width:${meterWidth}%"></span></span>
+          </div>
+        </td>
+        <td data-label="Out by">
+          <span class="cell-date">${cover.state === "out" ? "Out now" : cover.projected ? formatMonthYear(cover.projected) : "—"}</span>
+          <span class="cell-sub">${cover.state === "out" ? "no stock" : cover.months === null ? "no burn yet" : `${stock} ÷ ${burn.toFixed(1)}/mo`}</span>
+        </td>
+        <td data-label="Last adjustment">
+          ${lastAdjustment ? `
+            <span class="cell-date">${formatDate(lastAdjustment.at)}</span>
+            <span class="cell-sub stock-note" title="${esc(lastAdjustment.note)}">${esc(lastAdjustment.note)}</span>
+          ` : `<span class="cell-date">—</span>`}
+        </td>
         <td class="cell-actions" data-label="Actions">
           <button class="btn btn-secondary btn-sm" type="button" data-action="adjust-stock" data-type="${type.code}">Adjust</button>
         </td>
@@ -1530,7 +2165,7 @@ function renderStock() {
         <td data-label="Column type">
           <div class="stock-type-cell">
             <span class="type-code">${movement.type}</span>
-            <span><strong>${esc(type?.name || movement.type)}</strong></span>
+            <span><strong>${esc(type?.name || movement.type)}</strong><small>${esc(typeDimensionsShort(type))}</small></span>
           </div>
         </td>
         <td data-label="Change"><span class="movement-delta ${movement.delta > 0 ? "is-add" : "is-reduce"}">${deltaLabel}</span></td>
@@ -1544,25 +2179,43 @@ function renderStock() {
     <div class="page">
       <h1 class="sr-only">Unactivated stock</h1>
 
+      ${viewIntro(
+        "Stock operations",
+        `${total} unactivated ${unitWord(total, "column")} across ${TYPES.length} types. <strong>${out} out of stock, ${low} low.</strong>${shortestCover ? ` ${shortestCover.type.code} has the shortest cover among in-stock types at ${formatCover(shortestCover.cover)}.` : ""}`,
+        [
+          contextChip("Out", String(out), out ? "bad" : ""),
+          contextChip("Low", String(low), low ? "warn" : ""),
+          contextChip("Due replacement", String(due)),
+          contextChip("Saved", formatSavedAt(db.updatedAt))
+        ]
+      )}
+
       <div class="stock-summary" aria-label="Stock summary">
         <span class="stock-summary-chip">${icon("archive")} Total stock <strong>${total}</strong></span>
-        <span class="stock-summary-chip">${icon("activity")} Activations ${ui.year} <strong>${activations}</strong></span>
-        <span class="stock-summary-chip">${icon("alert")} Needs attention <strong>${low}</strong></span>
-        <span class="stock-summary-chip">${icon("close")} Out <strong>${out}</strong></span>
+        <span class="stock-summary-chip">${icon("activity")} Activations ${ui.year} <strong>${columnsForYear().length}</strong></span>
+        <span class="stock-summary-chip">${icon("alert")} Out <strong>${out}</strong></span>
       </div>
 
       <div class="info-banner">
         ${icon("archive")}
-        <p><strong>Stock = physical columns not yet activated.</strong> Use <strong>Adjust</strong> to add or reduce stock. Every adjustment requires a note and is recorded in the manual adjustment log. Adding stock does not change existing column codes.</p>
+        <p><strong>Stock = physical columns not yet activated.</strong> Cover = stock ÷ activations per month for the selected year. Use <strong>Adjust</strong> to add or reduce stock; every adjustment requires a note and appears in the log below.</p>
       </div>
 
-      <section class="panel">
+      <section class="panel" data-sort-scope>
         <div class="panel-head">
           <div>
-            <h2 class="panel-title">Stock by type</h2>
-            <p class="panel-sub">Ten column types · next code calculated from the ${ui.year} cycle</p>
+            <h2 class="panel-title">Stock runway</h2>
+            <p class="panel-sub">Stock, burn rate, and projected stockout for every type</p>
           </div>
-          <span class="panel-badge">${total} ${unitWord(total, "column")}</span>
+          <div class="panel-head-actions">
+            <select class="select-control select-control--compact" data-sort aria-label="Sort stock">
+              <option value="urgency">Most urgent first</option>
+              <option value="type">Type A–Z</option>
+              <option value="stock-asc">Stock low to high</option>
+              <option value="cover-desc">Longest cover</option>
+            </select>
+            <span class="panel-badge">${total} ${unitWord(total, "column")}</span>
+          </div>
         </div>
 
         <div class="table-wrap">
@@ -1570,11 +2223,11 @@ function renderStock() {
             <thead>
               <tr>
                 <th>Column type</th>
-                <th>Current stock</th>
-                <th>Level</th>
-                <th>Status</th>
-                <th>Activations ${ui.year}</th>
-                <th>Last</th>
+                <th>Stock</th>
+                <th>Burn / mo</th>
+                <th>Cover</th>
+                <th>Out by</th>
+                <th>Last adjustment</th>
                 <th class="cell-actions"><span class="sr-only">Actions</span></th>
               </tr>
             </thead>
@@ -1584,7 +2237,7 @@ function renderStock() {
 
         <div class="table-foot">
           <span>Total <strong>${total}</strong> ${unitWord(total, "column")} not activated</span>
-          <span>Low stock: <strong>${low}</strong> ${unitWord(low, "type")}</span>
+          <span>Cover uses ${columnsForYear(currentYear()).length} activations ÷ ${monthsElapsedForYear(currentYear())} months in ${currentYear()}</span>
         </div>
       </section>
 
@@ -1594,7 +2247,11 @@ function renderStock() {
             <h2 class="panel-title">Manual stock adjustments</h2>
             <p class="panel-sub">Newest first · ${stockMovements.length} ${unitWord(stockMovements.length, "record")}</p>
           </div>
-          <span class="panel-badge">${stockMovements.length}</span>
+          <div class="panel-head-actions">
+            <button class="btn btn-secondary btn-sm" type="button" data-action="backup-json">${icon("download")}Backup JSON</button>
+            <button class="btn btn-secondary btn-sm" type="button" data-action="restore-json">${icon("database")}Restore</button>
+            <span class="panel-badge">${stockMovements.length}</span>
+          </div>
         </div>
         ${stockMovements.length ? `
           <div class="table-wrap">
@@ -1616,6 +2273,10 @@ function renderStock() {
             <p class="section-note">No manual stock adjustments yet. Use Adjust to record a stock change.</p>
           </div>
         `}
+        <div class="table-foot">
+          <span>Last saved <strong>${formatSavedAt(db.updatedAt)}</strong></span>
+          <span>Backup downloads a JSON file you can restore later.</span>
+        </div>
       </section>
     </div>
   `;
@@ -1629,6 +2290,7 @@ function renderUsage() {
   const columns = columnsForYear();
   const activeColumns = columns.filter((column) => columnStatus(column) === "active");
   const inactiveColumns = columns.filter((column) => columnStatus(column) === "inactive");
+  const baseline = globalLifeBaseline();
 
   const perType = TYPES.map((type) => {
     const typeColumns = columns
@@ -1644,9 +2306,8 @@ function renderUsage() {
     }
 
     const lifeValues = typeColumns
-      .filter((column) => columnStatus(column) === "inactive")
-      .map((column) => daysBetween(column.activatedAt, column.statusChangedAt || column.activatedAt))
-      .filter((days) => Number.isFinite(days));
+      .map(inactiveLifeDays)
+      .filter((days) => Number.isFinite(days) && days > 0);
 
     return {
       type,
@@ -1656,6 +2317,8 @@ function renderUsage() {
       intervals,
       avgInterval: average(intervals.map((interval) => interval.days)),
       avgLife: average(lifeValues),
+      lifeSample: lifeValues.length,
+      expected: expectedLifeForType(type.code),
       last: typeColumns.at(-1)?.activatedAt || ""
     };
   });
@@ -1664,24 +2327,20 @@ function renderUsage() {
   const maxAvgInterval = Math.max(...perType.map((item) => item.avgInterval || 0), 1);
   const maxIntervalDays = Math.max(...allIntervals.map((interval) => interval.days), 1);
   const avgInterval = average(allIntervals.map((interval) => interval.days));
-  const avgLife = average(
-    inactiveColumns
-      .map((column) => daysBetween(column.activatedAt, column.statusChangedAt || column.activatedAt))
-      .filter((days) => Number.isFinite(days))
-  );
-  const monthsElapsed = ui.year === currentYear()
-    ? Math.max(1, new Date().getMonth() + 1)
-    : ui.year < currentYear() ? 12 : 1;
+  const monthsElapsed = monthsElapsedForYear(ui.year);
   const activationsPerMonth = columns.length / Math.max(1, monthsElapsed);
   const avgIntervalDays = avgInterval === null ? null : Math.round(avgInterval);
-  const avgLifeDays = avgLife === null ? null : Math.round(avgLife);
+  const oldestActive = activeColumns
+    .map((column) => ({ column, life: lifecycleFor(column) }))
+    .sort((a, b) => b.life.days - a.life.days)
+    .slice(0, 6);
 
   const typeRows = perType.map((item) => `
     <tr>
       <td data-label="Column type">
         <a class="stock-type-cell usage-type-link" href="#/types/${item.type.code}">
           <span class="type-code">${item.type.code}</span>
-          <span><strong>${esc(item.type.name)}</strong></span>
+          <span><strong>${esc(item.type.name)}</strong><small>${esc(typeDimensionsShort(item.type))}</small></span>
         </a>
       </td>
       <td data-label="Activations"><span class="cell-date">${item.activations}</span></td>
@@ -1689,11 +2348,19 @@ function renderUsage() {
       <td data-label="Inactive"><span class="cell-date">${item.inactive}</span></td>
       <td data-label="Avg. interval">
         <div class="metric-cell">
-          <div class="metric-cell-top"><span class="metric-value">${formatDays(item.avgInterval)}</span></div>
+          <div class="metric-cell-top"><span class="metric-value">${formatDays(item.avgInterval)}</span><span class="metric-sample">n=${item.intervals.length}</span></div>
           ${item.avgInterval === null ? "" : `<span class="metric-track"><span class="metric-fill" style="width:${Math.max(6, Math.round((item.avgInterval / maxAvgInterval) * 100))}%"></span></span>`}
         </div>
       </td>
-      <td data-label="Avg. service life"><span class="cell-date">${formatDays(item.avgLife)}</span></td>
+      <td data-label="Avg. service life">
+        <div class="metric-cell">
+          <div class="metric-cell-top">
+            <span class="metric-value">${item.avgLife === null ? "—" : formatDays(item.avgLife)}</span>
+            <span class="metric-sample">n=${item.lifeSample}</span>
+          </div>
+          <span class="cell-sub">${item.avgLife === null && item.expected.days ? `est. ~${item.expected.days} d baseline` : item.avgLife === null ? "no retired columns" : "measured from retired columns"}</span>
+        </div>
+      </td>
       <td data-label="Last activation"><span class="cell-date">${item.last ? formatDate(item.last) : "—"}</span></td>
     </tr>
   `).join("");
@@ -1728,6 +2395,16 @@ function renderUsage() {
     <div class="page">
       <h1 class="sr-only">Column usage</h1>
 
+      ${viewIntro(
+        "Usage analytics",
+        `Average activation interval is <strong>${avgIntervalDays === null ? "not available" : `${avgIntervalDays} days`}</strong> across ${allIntervals.length} intervals. Service-life estimates use ${baseline.sample} retired columns.`,
+        [
+          contextChip("Intervals", String(allIntervals.length)),
+          contextChip("Retired sample", String(baseline.sample)),
+          contextChip("Baseline life", baseline.days ? `~${baseline.days} d` : "—")
+        ]
+      )}
+
       <div class="kpi-grid">
         <div class="kpi">
           <div class="kpi-top">
@@ -1735,7 +2412,7 @@ function renderUsage() {
             <span class="kpi-icon" aria-hidden="true">${icon("trend")}</span>
           </div>
           <div class="kpi-value">${avgIntervalDays === null ? "—" : `${counterHTML(avgIntervalDays)}<span class="kpi-unit">${unitWord(avgIntervalDays, "day")}</span>`}</div>
-          <p class="kpi-note">${allIntervals.length ? `Across ${allIntervals.length} ${unitWord(allIntervals.length, "interval")}` : "Not enough intervals yet"}</p>
+          <p class="kpi-note">${allIntervals.length ? `Across ${allIntervals.length} ${unitWord(allIntervals.length, "interval")} in ${ui.year}` : "Not enough intervals yet"}</p>
         </div>
 
         <div class="kpi">
@@ -1749,11 +2426,11 @@ function renderUsage() {
 
         <div class="kpi">
           <div class="kpi-top">
-            <span class="kpi-label">Avg. service life</span>
+            <span class="kpi-label">Service-life baseline</span>
             <span class="kpi-icon" aria-hidden="true">${icon("history")}</span>
           </div>
-          <div class="kpi-value">${avgLifeDays === null ? "—" : `${counterHTML(avgLifeDays)}<span class="kpi-unit">${unitWord(avgLifeDays, "day")}</span>`}</div>
-          <p class="kpi-note">${inactiveColumns.length ? `Across ${inactiveColumns.length} inactive ${unitWord(inactiveColumns.length, "column")}` : "No inactive columns yet"}</p>
+          <div class="kpi-value">${baseline.days === null ? "—" : `${counterHTML(baseline.days)}<span class="kpi-unit">${unitWord(baseline.days, "day")}</span>`}</div>
+          <p class="kpi-note">${baseline.sample ? `Mean of ${baseline.sample} retired ${unitWord(baseline.sample, "column")}` : "No retired columns yet"}</p>
         </div>
 
         <div class="kpi">
@@ -1762,7 +2439,7 @@ function renderUsage() {
             <span class="kpi-icon" aria-hidden="true">${icon("column")}</span>
           </div>
           <div class="kpi-value">${counterHTML(activeColumns.length)}<span class="kpi-unit">${unitWord(activeColumns.length, "column")}</span></div>
-          <p class="kpi-note">${inactiveColumns.length} inactive</p>
+          <p class="kpi-note">${inactiveColumns.length} inactive · ${uniquePurposeCount(activeColumns)} purposes</p>
         </div>
       </div>
 
@@ -1770,7 +2447,7 @@ function renderUsage() {
         <div class="panel-head">
           <div>
             <h2 class="panel-title">Per column type</h2>
-            <p class="panel-sub">Activation cadence and service life in ${ui.year}</p>
+            <p class="panel-sub">Activation cadence, sample size, and service life in ${ui.year}</p>
           </div>
           <span class="panel-badge">${TYPES.length} types</span>
         </div>
@@ -1792,8 +2469,33 @@ function renderUsage() {
         </div>
         <div class="table-foot">
           <span>Interval = days between consecutive activations of the same type</span>
-          <span>Service life = activation to inactive date</span>
+          <span>Service life = activation to inactive date; n = sample size</span>
         </div>
+      </section>
+
+      <section class="panel" style="margin-top:13px">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">Longest-serving active columns</h2>
+            <p class="panel-sub">Oldest active columns first · compare age with expected life</p>
+          </div>
+          <a class="text-link" href="#/activations">Open register ${icon("chevron-right")}</a>
+        </div>
+        ${oldestActive.length ? `
+          <div class="panel-body panel-body--tight">
+            <div class="watch-list">
+              ${oldestActive.map(({ column, life }) => `
+                <button class="watch-row" type="button" data-action="open-column" data-id="${column.id}">
+                  <span class="watch-main">
+                    <span class="cell-code">${columnCode(column)}</span>
+                    <span class="cell-sub">${esc(typeByCode(column.type)?.name || column.type)} · ${formatDaysShort(life.days)} in service · ~${life.expected.days} d expected</span>
+                  </span>
+                  ${lifeBadge(life)}
+                </button>
+              `).join("")}
+            </div>
+          </div>
+        ` : `<div class="panel-body"><p class="section-note">No active columns in ${ui.year}.</p></div>`}
       </section>
 
       <section class="panel" style="margin-top:13px">
@@ -1832,8 +2534,8 @@ function renderUsage() {
 
       <div class="side-note" style="margin-top:13px">
         <strong>How this is calculated.</strong> Activation interval is the number of days between two consecutive activations of the same column type.
-        Service life is the number of days from activation to the date a column was marked inactive.
-        Activations per month uses the elapsed months in the selected year.
+        Service life is the number of days from activation to the date a column was marked inactive. The service-life baseline uses every retired column in the registry, across years.
+        Life remaining on other pages uses a type-specific baseline only when at least two retired columns of that type exist; otherwise it falls back to this global baseline.
       </div>
     </div>
   `;
@@ -1865,6 +2567,9 @@ function applyFilters(scope) {
   const kind = scope.querySelector('[data-filter="kind"]')?.value || "";
   const stock = scope.querySelector('[data-filter="stock"]')?.value || "";
   const status = scope.querySelector('[data-filter="status"]')?.value || "";
+  const life = scope.querySelector('[data-filter="life"]')?.value || "";
+  const dateFrom = scope.querySelector('[data-filter="dateFrom"]')?.value || "";
+  const dateTo = scope.querySelector('[data-filter="dateTo"]')?.value || "";
   const rows = [...scope.querySelectorAll("[data-filter-row]")];
   let visible = 0;
 
@@ -1877,6 +2582,9 @@ function applyFilters(scope) {
     if (match && kind && row.dataset.kind !== kind) match = false;
     if (match && stock && row.dataset.stock !== stock) match = false;
     if (match && status && row.dataset.status !== status) match = false;
+    if (match && life && row.dataset.life !== life) match = false;
+    if (match && dateFrom && (row.dataset.date || "") < dateFrom) match = false;
+    if (match && dateTo && (row.dataset.date || "") > dateTo) match = false;
 
     row.hidden = !match;
     if (match) visible += 1;
@@ -1891,6 +2599,44 @@ function applyFilters(scope) {
 
   const empty = scope.querySelector("[data-filter-empty]");
   if (empty) empty.hidden = visible !== 0;
+
+  applySort(scope);
+}
+
+function applySort(scope) {
+  if (!scope) return;
+
+  const select = scope.querySelector("[data-sort]");
+  if (!select) return;
+
+  const container = scope.querySelector("tbody") || scope.querySelector("[data-filter-table]");
+  if (!container) return;
+
+  const rows = [...container.children].filter((row) => row.matches("[data-filter-row], [data-sort-row]"));
+  if (rows.length < 2) return;
+
+  const key = select.value;
+  const textOf = (row, name) => String(row.dataset[name] || row.textContent || "").trim();
+  const numberOf = (row, name) => Number(row.dataset[name]) || 0;
+
+  const compare = (a, b) => {
+    if (key === "type" || key === "code-asc") {
+      return textOf(a, "type").localeCompare(textOf(b, "type")) || textOf(a, "code").localeCompare(textOf(b, "code"));
+    }
+    if (key === "stock-asc") {
+      const stockOf = (row) => Number(row.dataset.stockCount ?? row.dataset.stock) || 0;
+      return stockOf(a) - stockOf(b);
+    }
+    if (key === "activations-desc") return numberOf(b, "activations") - numberOf(a, "activations");
+    if (key === "cover-asc" || key === "urgency") return numberOf(a, "cover") - numberOf(b, "cover");
+    if (key === "cover-desc") return numberOf(b, "cover") - numberOf(a, "cover");
+    if (key === "date-desc") return String(b.dataset.date || "").localeCompare(String(a.dataset.date || ""));
+    if (key === "date-asc") return String(a.dataset.date || "").localeCompare(String(b.dataset.date || ""));
+    if (key === "days-desc") return numberOf(b, "days") - numberOf(a, "days");
+    return 0;
+  };
+
+  rows.sort(compare).forEach((row) => container.appendChild(row));
 }
 
 /* =========================================================
@@ -1905,10 +2651,120 @@ function typeOptions(selectedCode = "") {
   }).join("");
 }
 
-function purposeOptions(selectedId = "") {
-  return PURPOSES.map((purpose) => (
-    `<option value="${purpose.id}"${purpose.id === selectedId ? " selected" : ""}>${esc(purpose.label)}</option>`
-  )).join("");
+function purposeCombobox(selectedId = "", inputId = "addPurpose", placeholder = "Search 14 purposes…") {
+  const selected = purposeById(selectedId);
+  return `
+    <div class="combo" data-combo>
+      <input class="input combo-input"
+             id="${inputId}"
+             type="text"
+             role="combobox"
+             aria-expanded="false"
+             aria-controls="${inputId}List"
+             aria-autocomplete="list"
+             autocomplete="off"
+             placeholder="${esc(placeholder)}"
+             value="${selected ? esc(selected.label) : ""}"
+             data-combo-input>
+      <input type="hidden" name="purpose" value="${selected ? selected.id : ""}" data-combo-value>
+      <svg class="icon combo-chevron" aria-hidden="true"><use href="#i-chevron-right"></use></svg>
+      <div class="combo-list" id="${inputId}List" role="listbox" hidden>
+        ${PURPOSES.map((purpose) => `
+          <button class="combo-option" type="button" role="option" data-combo-option data-value="${purpose.id}" data-label="${esc(purpose.label)}" aria-selected="${purpose.id === selectedId}">
+            ${esc(purpose.label)}
+            ${icon("check")}
+          </button>
+        `).join("")}
+        <p class="combo-empty" hidden>No matching purpose.</p>
+      </div>
+    </div>
+  `;
+}
+
+function comboParts(combo) {
+  return {
+    input: combo?.querySelector("[data-combo-input]"),
+    value: combo?.querySelector("[data-combo-value]"),
+    list: combo?.querySelector(".combo-list"),
+    options: [...(combo?.querySelectorAll("[data-combo-option]") || [])]
+  };
+}
+
+function closeAllCombos(except = null) {
+  document.querySelectorAll("[data-combo].is-open").forEach((combo) => {
+    if (combo !== except) closeCombo(combo);
+  });
+}
+
+function openCombo(combo) {
+  if (!combo) return;
+  closeAllCombos(combo);
+  const { input, value, list, options } = comboParts(combo);
+  if (!input || !list) return;
+
+  if (value?.value && input.value.trim() === purposeLabel(value.value)) {
+    options.forEach((option) => {
+      option.hidden = false;
+    });
+  }
+
+  list.hidden = false;
+  combo.classList.add("is-open");
+  input.setAttribute("aria-expanded", "true");
+  options.forEach((option) => option.classList.remove("is-active"));
+}
+
+function closeCombo(combo) {
+  if (!combo) return;
+  const { input, list } = comboParts(combo);
+  if (list) list.hidden = true;
+  combo.classList.remove("is-open");
+  if (input) input.setAttribute("aria-expanded", "false");
+}
+
+function filterCombo(combo) {
+  const { input, value, options, list } = comboParts(combo);
+  if (!input || !list) return;
+  const query = input.value.trim().toLocaleLowerCase("en");
+  let visible = 0;
+
+  options.forEach((option) => {
+    const match = !query || option.dataset.label.toLocaleLowerCase("en").includes(query);
+    option.hidden = !match;
+    option.classList.remove("is-active");
+    if (match) visible += 1;
+  });
+
+  if (value && value.value && input.value.trim() !== purposeLabel(value.value)) {
+    value.value = "";
+  }
+
+  const empty = combo.querySelector(".combo-empty");
+  if (empty) empty.hidden = visible > 0;
+  openCombo(combo);
+}
+
+function chooseComboOption(combo, option) {
+  if (!combo || !option) return;
+  const { input, value } = comboParts(combo);
+  if (input) input.value = option.dataset.label;
+  if (value) value.value = option.dataset.value;
+  combo.querySelectorAll("[data-combo-option]").forEach((item) => {
+    item.setAttribute("aria-selected", String(item === option));
+    item.classList.remove("is-active");
+  });
+  closeCombo(combo);
+  if (combo.closest("#addColumnForm")) updateAddPreview();
+  if (combo.closest("#changePurposeForm")) setFormError(combo.closest("form"), "");
+}
+
+function moveComboSelection(combo, direction) {
+  const options = [...combo.querySelectorAll("[data-combo-option]:not([hidden])")];
+  if (!options.length) return;
+  let index = options.findIndex((option) => option.classList.contains("is-active"));
+  index = index === -1 ? (direction > 0 ? 0 : options.length - 1) : (index + direction + options.length) % options.length;
+  options.forEach((option, optionIndex) => option.classList.toggle("is-active", optionIndex === index));
+  options[index].scrollIntoView({ block: "nearest" });
 }
 
 function openAddModal(preselectedType = "") {
@@ -1943,10 +2799,8 @@ function openAddModal(preselectedType = "") {
 
               <div class="field">
                 <label for="addPurpose"><span>Purpose <span class="required" aria-hidden="true">*</span></span></label>
-                <select class="select" id="addPurpose" name="purpose" required>
-                  <option value="">Select a purpose…</option>
-                  ${purposeOptions()}
-                </select>
+                ${purposeCombobox("", "addPurpose")}
+                <p class="field-hint">Type to filter the 14 registered purposes.</p>
               </div>
 
               <div class="field">
@@ -1969,9 +2823,11 @@ function openAddModal(preselectedType = "") {
               <div class="preview-rule"></div>
               <dl class="preview-list">
                 <div><dt>Type</dt><dd id="previewType">${typeCode} · ${esc(type.name)}</dd></div>
+                <div><dt>Dimensions</dt><dd id="previewDimensions">${typeDimensionsLines(type)}</dd></div>
                 <div><dt>Purpose</dt><dd id="previewPurpose">Not selected</dd></div>
                 <div><dt>Sequence</dt><dd id="previewSeq">${pad2(nextSequence(typeCode, currentYear()))}</dd></div>
                 <div><dt>Current stock</dt><dd id="previewStock">${stock}</dd></div>
+                <div><dt>Est. life</dt><dd id="previewLife">${expectedLifeLabel(typeCode)}</dd></div>
               </dl>
               <p class="preview-note" id="previewNote">Sequence is automatic per type per year. The year follows the activation date.</p>
             </aside>
@@ -2010,21 +2866,25 @@ function updateAddPreview() {
 
   const previewCode = document.getElementById("previewCode");
   const previewType = document.getElementById("previewType");
+  const previewDimensions = document.getElementById("previewDimensions");
   const previewPurpose = document.getElementById("previewPurpose");
   const previewSeq = document.getElementById("previewSeq");
   const previewStock = document.getElementById("previewStock");
+  const previewLife = document.getElementById("previewLife");
   const previewNote = document.getElementById("previewNote");
   const typeHint = document.getElementById("addTypeHint");
 
   if (previewCode) previewCode.textContent = `${typeCode}-${pad2(seq)}/${IPC_KEYWORD}/${String(year).slice(-2)}`;
   if (previewType) previewType.textContent = `${typeCode} · ${type.name}`;
+  if (previewDimensions) previewDimensions.innerHTML = typeDimensionsLines(type);
   if (previewPurpose) previewPurpose.textContent = purpose ? purposeLabel(purpose) : "Not selected";
   if (previewSeq) previewSeq.textContent = pad2(seq);
   if (previewStock) {
     previewStock.textContent = stock > 0 ? String(stock) : "0 — out";
     previewStock.classList.toggle("is-out", stock <= 0);
   }
-  if (typeHint) typeHint.textContent = `Code ${typeCode} · ${type.name} · ${stock} in stock`;
+  if (previewLife) previewLife.textContent = expectedLifeLabel(typeCode);
+  if (typeHint) typeHint.textContent = `Code ${typeCode} · ${type.name} · ${typeDimensionsShort(type)} · ${stock} in stock`;
 
   if (previewNote) {
     if (stock <= 0) {
@@ -2162,10 +3022,8 @@ function openChangePurposeModal(columnId) {
 
           <div class="field">
             <label for="changePurpose"><span>New purpose <span class="required" aria-hidden="true">*</span></span></label>
-            <select class="select" id="changePurpose" name="purpose" required>
-              <option value="">Select a new purpose…</option>
-              ${purposeOptions()}
-            </select>
+            ${purposeCombobox("", "changePurpose", "Search a new purpose…")}
+            <p class="field-hint">Type to filter. Current purpose is ${esc(purposeLabel(column.purpose))}.</p>
           </div>
 
           <div class="field">
@@ -2402,7 +3260,7 @@ function openStockAdjustModal(typeCode) {
         <div>
           <p class="eyebrow">Stock adjustment</p>
           <h2 id="modalTitle">Adjust stock</h2>
-          <p>${type.code} · ${esc(type.name)}</p>
+          <p>${type.code} · ${esc(type.name)} · ${esc(typeDimensionsShort(type))}</p>
         </div>
         <button class="icon-btn" type="button" data-action="close-modal" aria-label="Close dialog">${icon("close")}</button>
       </div>
@@ -2411,7 +3269,10 @@ function openStockAdjustModal(typeCode) {
         <div class="modal-body">
           <div class="current-purpose">
             <span>Current stock</span>
-            <strong class="stock-value">${pad2(stock)}</strong>
+            <span class="current-stock-meta">
+              <strong class="stock-value">${pad2(stock)}</strong>
+              <small>${formatCover(stockCoverForType(type.code))} cover · ${burnRateForType(type.code).toFixed(1)}/mo burn</small>
+            </span>
           </div>
 
           <div class="field">
@@ -2493,7 +3354,9 @@ function updateStockPreview() {
       noteEl.textContent = `Only ${current} in stock. Reduce the quantity or switch to Add.`;
       noteEl.classList.add("is-error");
     } else {
-      noteEl.textContent = `Stock will change from ${current} to ${next}.`;
+      const burn = burnRateForType(type.code);
+      const cover = next > 0 && burn > 0 ? ` Cover becomes ${(next / burn).toFixed(1)} months at ${burn.toFixed(1)}/mo.` : "";
+      noteEl.textContent = `Stock will change from ${current} to ${next}.${cover}`;
       noteEl.classList.remove("is-error");
     }
   }
@@ -2579,11 +3442,17 @@ function openColumnDrawer(columnId) {
 
   const type = typeByCode(column.type);
   const stock = db.stock[column.type] || 0;
+  const cover = stockCoverForType(column.type);
+  const life = lifecycleFor(column);
   const history = [...column.history].sort((a, b) => {
     const byDate = String(b.at).localeCompare(String(a.at));
     if (byDate !== 0) return byDate;
     return String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
   });
+  const replacement = columnStatus(column) === "active" && Number.isFinite(life.remaining)
+    ? (life.remaining <= 0 ? "Overdue" : formatMonthYear(addDaysISO(todayISO(), life.remaining)))
+    : "—";
+  const remainingLabel = columnStatus(column) === "active" ? lifeRemainingText(life) : "—";
 
   const html = `
     <div class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
@@ -2591,41 +3460,72 @@ function openColumnDrawer(columnId) {
         <div>
           <p class="eyebrow">Column detail</p>
           <h2 class="drawer-code" id="drawerTitle">${columnCode(column)}</h2>
-          <p class="drawer-sub">${esc(type?.name || column.type)} · code ${column.type}</p>
+          <p class="drawer-sub">${esc(type?.name || column.type)} · ${esc(typeDimensionsShort(type))} · ${esc(type?.phase || "")}</p>
         </div>
         <button class="icon-btn" type="button" data-action="close-modal" aria-label="Close details">${icon("close")}</button>
       </div>
 
       <div class="drawer-body">
-        <div class="drawer-section">
+        <div class="drawer-section drawer-section--split">
           <div class="drawer-purpose">
             <span class="drawer-purpose-label">Active purpose</span>
             <strong>${esc(purposeLabel(column.purpose))}</strong>
             <span class="cell-sub">Since ${formatDate(column.purposeSince || column.activatedAt)}</span>
           </div>
-        </div>
-
-        <div class="drawer-section">
           <div class="drawer-status">
             <div>
               <span class="drawer-purpose-label">Status</span>
               <strong>${columnStatusBadge(column)}</strong>
               <span class="cell-sub">Since ${formatDate(column.statusChangedAt || column.activatedAt)}</span>
             </div>
-            <button class="btn btn-secondary btn-sm" type="button" data-action="change-status" data-id="${column.id}">
-              ${columnStatus(column) === "active" ? "Mark inactive" : "Reactivate"}
-            </button>
           </div>
         </div>
 
         <div class="drawer-section">
-          <h3 class="drawer-section-title">Column information</h3>
+          <div class="drawer-section-head">
+            <h3 class="drawer-section-title">Lifecycle</h3>
+            ${lifeBadge(life)}
+          </div>
+          <div class="lifecycle-grid">
+            <div class="lifecycle-cell">
+              <span>In service</span>
+              <strong>${formatDaysShort(life.days)}</strong>
+            </div>
+            <div class="lifecycle-cell">
+              <span>Expected life</span>
+              <strong>${life.expected.days ? `~${life.expected.days} d` : "—"}</strong>
+              <small>n=${life.expected.sample}${life.expected.source === "all" ? " · all types" : ""}</small>
+            </div>
+            <div class="lifecycle-cell">
+              <span>Remaining</span>
+              <strong class="${life.state === "due" ? "is-due" : life.state === "soon" ? "is-soon" : ""}">${remainingLabel}</strong>
+            </div>
+            <div class="lifecycle-cell">
+              <span>Est. replacement</span>
+              <strong>${replacement}</strong>
+            </div>
+          </div>
+          <p class="field-hint">Expected life is the mean service life of retired columns. It is a planning estimate, not a manufacturer rating.</p>
+        </div>
+
+        <div class="drawer-section">
+          <h3 class="drawer-section-title">Column specification</h3>
+          <dl class="detail-pairs">
+            <div class="detail-pair"><dt>Product</dt><dd>${esc(type?.product || "—")}</dd></div>
+            <div class="detail-pair"><dt>Supplier</dt><dd>${esc(type?.supplier || "—")}</dd></div>
+            <div class="detail-pair"><dt>Dimensions</dt><dd>${esc(typeDimensions(type))}</dd></div>
+            <div class="detail-pair"><dt>Phase</dt><dd>${esc(type?.phase || "—")}</dd></div>
+          </dl>
+        </div>
+
+        <div class="drawer-section">
+          <h3 class="drawer-section-title">Registry information</h3>
           <dl class="detail-pairs">
             <div class="detail-pair"><dt>Type</dt><dd>${column.type} · ${esc(type?.name || column.type)}</dd></div>
             <div class="detail-pair"><dt>Year</dt><dd>${column.year}</dd></div>
             <div class="detail-pair"><dt>Sequence</dt><dd>#${column.seq}</dd></div>
             <div class="detail-pair"><dt>Activated</dt><dd>${formatDate(column.activatedAt)}</dd></div>
-            <div class="detail-pair"><dt>Type stock</dt><dd>${stock} ${unitWord(stock, "column")}</dd></div>
+            <div class="detail-pair"><dt>Type stock</dt><dd>${stock} ${unitWord(stock, "column")} · ${formatCover(cover)} cover</dd></div>
             <div class="detail-pair"><dt>Changes</dt><dd>${Math.max(0, history.length - 1)} ${unitWord(Math.max(0, history.length - 1), "time")}</dd></div>
           </dl>
         </div>
@@ -2640,6 +3540,9 @@ function openColumnDrawer(columnId) {
 
       <div class="drawer-foot">
         <button class="btn btn-secondary" type="button" data-action="copy-code" data-code="${columnCode(column)}">${icon("copy")}Copy code</button>
+        <button class="btn btn-secondary" type="button" data-action="change-status" data-id="${column.id}">
+          ${columnStatus(column) === "active" ? "Mark inactive" : "Reactivate"}
+        </button>
         <button class="btn btn-primary" type="button" data-action="change-purpose" data-id="${column.id}">${icon("refresh")}Change purpose</button>
       </div>
     </div>
@@ -2656,33 +3559,256 @@ function csvCell(value) {
   return `"${String(value ?? "").replace(/"/g, '""')}"`;
 }
 
-function exportCsv() {
-  const columns = [...columnsForYear()].sort((a, b) => a.activatedAt.localeCompare(b.activatedAt) || a.seq - b.seq);
-  const rows = [
-    ["Column Code", "Column Type", "Purpose", "Status", "Activation Date", "Status Changed", "Year", "Activation Notes"],
-    ...columns.map((column) => [
-      columnCode(column),
-      typeByCode(column.type)?.name || column.type,
-      purposeLabel(column.purpose),
-      columnStatusLabel(column),
-      column.activatedAt,
-      column.statusChangedAt || column.activatedAt,
-      column.year,
-      activationNote(column)
-    ])
-  ];
-
-  const csv = "\uFEFF" + rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+function downloadFile(filename, content, type) {
+  const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = `hplc-columns-${ui.year}.csv`;
+  anchor.download = filename;
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function exportCsv() {
+  const columns = [...columnsForYear()].sort((a, b) => a.activatedAt.localeCompare(b.activatedAt) || a.seq - b.seq);
+  const rows = [
+    [
+      "Column Code",
+      "Column Type",
+      "Product",
+      "Length (mm)",
+      "ID (mm)",
+      "Particle (um)",
+      "Pore (A)",
+      "Phase",
+      "Purpose",
+      "Status",
+      "Activated",
+      "In Service (days)",
+      "Expected Life (days)",
+      "Remaining (days)",
+      "Status Changed",
+      "Activation Notes"
+    ],
+    ...columns.map((column) => {
+      const type = typeByCode(column.type);
+      const life = lifecycleFor(column);
+      return [
+        columnCode(column),
+        type?.name || column.type,
+        type?.product || "",
+        type?.dimensions?.length ?? "",
+        type?.dimensions?.diameter ?? "",
+        type?.dimensions?.particle ?? "",
+        type?.dimensions?.pore ?? "",
+        type?.phase || "",
+        purposeLabel(column.purpose),
+        columnStatusLabel(column),
+        column.activatedAt,
+        life.days,
+        life.expected.days ?? "",
+        Number.isFinite(life.remaining) ? life.remaining : "",
+        column.statusChangedAt || column.activatedAt,
+        activationNote(column)
+      ];
+    })
+  ];
+
+  const csv = "\uFEFF" + rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
+  downloadFile(`ipc-columns-${ui.year}.csv`, csv, "text/csv;charset=utf-8;");
   showToast(`CSV for ${ui.year} downloaded.`, "success");
+}
+
+function exportHistoryCsv() {
+  const events = allHistoryEvents(ui.year);
+  const rows = [
+    ["Date", "Column Code", "Column Type", "Product", "Event", "From", "To", "Purpose", "Note"],
+    ...events.map((event) => {
+      const type = typeByCode(event.column.type);
+      return [
+        event.at,
+        columnCode(event.column),
+        type?.name || event.column.type,
+        type?.product || "",
+        event.kind === "change" ? "Purpose change" : event.kind === "status" ? "Status change" : "Activation",
+        event.from ? (event.kind === "status" ? statusValueLabel(event.from) : purposeLabel(event.from)) : "",
+        event.to ? (event.kind === "status" ? statusValueLabel(event.to) : purposeLabel(event.to)) : "",
+        event.purpose ? purposeLabel(event.purpose) : "",
+        event.note || ""
+      ];
+    })
+  ];
+
+  const csv = "\uFEFF" + rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
+  downloadFile(`ipc-history-${ui.year}.csv`, csv, "text/csv;charset=utf-8;");
+  showToast(`History CSV for ${ui.year} downloaded.`, "success");
+}
+
+function exportBackup() {
+  const payload = {
+    app: "ipc-column-registry",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    data: db
+  };
+  downloadFile(
+    `ipc-column-registry-backup-${todayISO()}.json`,
+    JSON.stringify(payload, null, 2),
+    "application/json"
+  );
+  showToast("Backup JSON downloaded.", "success");
+}
+
+function openRestoreModal() {
+  if (ui.overlay) hideOverlay(false);
+
+  const html = `
+    <div class="modal modal--sm" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-head">
+        <div>
+          <p class="eyebrow">Local data</p>
+          <h2 id="modalTitle">Restore from backup</h2>
+          <p>Import a JSON backup created by this app.</p>
+        </div>
+        <button class="icon-btn" type="button" data-action="close-modal" aria-label="Close dialog">${icon("close")}</button>
+      </div>
+
+      <form id="restoreForm" novalidate>
+        <div class="modal-body">
+          <div class="restore-warning">
+            ${icon("alert")}
+            <p>The current stock, columns, and history in this browser will be replaced by the backup. Export the current data first if you need to keep it.</p>
+          </div>
+
+          <div class="field">
+            <label for="restoreFile"><span>Backup file <span class="required" aria-hidden="true">*</span></span></label>
+            <input class="input file-input" id="restoreFile" name="backup" type="file" accept=".json,application/json" required data-autofocus>
+            <p class="field-hint">Only backups exported from this registry are accepted.</p>
+          </div>
+
+          <p class="form-error" data-form-error role="alert" hidden></p>
+        </div>
+
+        <div class="modal-foot">
+          <button class="btn btn-ghost" type="button" data-action="close-modal">Cancel</button>
+          <button class="btn btn-primary" type="submit">${icon("database")}Restore backup</button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  showOverlay(html, { type: "modal" });
+}
+
+async function submitRestore(form) {
+  if (!form) return;
+  const file = form.elements.backup?.files?.[0];
+
+  if (!file) {
+    setFormError(form, "Choose a JSON backup file first.");
+    return;
+  }
+
+  try {
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    const data = parsed?.data && parsed.data.stock ? parsed.data : parsed;
+
+    if (!data || data.version !== 1 || typeof data.stock !== "object" || !Array.isArray(data.columns)) {
+      setFormError(form, "This file is not a valid IPC Column Registry backup.");
+      return;
+    }
+
+    const columns = data.columns
+      .filter((column) => (
+        column &&
+        typeof column.id === "string" &&
+        typeByCode(column.type) &&
+        typeof column.activatedAt === "string"
+      ))
+      .map((column) => {
+        const type = typeByCode(column.type);
+        const year = Number(column.year) || Number(column.activatedAt.slice(0, 4)) || currentYear();
+        const seq = Number(column.seq) || 1;
+        const purpose = purposeById(column.purpose)?.id || "apap";
+        const history = Array.isArray(column.history) ? column.history : [];
+
+        if (!history.some((event) => event?.kind === "activation")) {
+          history.unshift({
+            kind: "activation",
+            at: column.activatedAt,
+            purpose,
+            note: "",
+            createdAt: `${column.activatedAt}T00:00:00.000Z`
+          });
+        }
+
+        return {
+          id: column.id,
+          type: type.code,
+          seq,
+          year,
+          activatedAt: column.activatedAt,
+          purpose,
+          purposeSince: column.purposeSince || column.activatedAt,
+          status: column.status === "inactive" ? "inactive" : "active",
+          statusChangedAt: column.statusChangedAt || column.activatedAt,
+          createdAt: column.createdAt || `${column.activatedAt}T00:00:00.000Z`,
+          history
+        };
+      });
+
+    if (!columns.length && data.columns.length) {
+      setFormError(form, "The backup contains columns, but none are valid for the current type list.");
+      return;
+    }
+
+    const stock = {};
+    TYPES.forEach((type) => {
+      const value = Number(data.stock[type.code]);
+      stock[type.code] = Number.isFinite(value) ? Math.max(0, Math.round(value)) : 0;
+    });
+
+    const stockMovements = Array.isArray(data.stockMovements)
+      ? data.stockMovements
+        .filter((movement) => movement && typeByCode(movement.type) && typeof movement.at === "string")
+        .map((movement) => ({
+          id: typeof movement.id === "string" ? movement.id : uid(),
+          at: movement.at,
+          type: typeByCode(movement.type).code,
+          delta: Number(movement.delta) || 0,
+          before: Number(movement.before) || 0,
+          after: Number(movement.after) || 0,
+          note: String(movement.note || ""),
+          createdAt: movement.createdAt || `${movement.at}T00:00:00.000Z`
+        }))
+      : [];
+
+    db = {
+      version: 1,
+      stock,
+      columns,
+      stockMovements,
+      updatedAt: new Date().toISOString()
+    };
+
+    const latestYear = Math.max(...columns.map((column) => column.year));
+    if (Number.isFinite(latestYear)) {
+      ui.year = latestYear;
+      saveYear();
+    }
+    ui.stockFocus = null;
+    ui.pendingScroll = false;
+
+    saveDb();
+    hideOverlay(false);
+    render();
+    showToast(`Backup restored: ${columns.length} columns and ${totalStock()} stock.`, "success");
+  } catch (error) {
+    setFormError(form, "The file could not be read. Choose a valid JSON backup.");
+  }
 }
 
 /* =========================================================
@@ -2766,7 +3892,8 @@ function renderSearchResults(rawQuery) {
     }
 
     for (const type of TYPES) {
-      if (`${type.code} ${type.name}`.toLocaleLowerCase("en").includes(query)) typeResults.push(type);
+      const haystack = `${type.code} ${type.name} ${type.product} ${type.phase} ${typeDimensions(type)}`.toLocaleLowerCase("en");
+      if (haystack.includes(query)) typeResults.push(type);
     }
 
     for (const page of PAGES) {
@@ -2827,7 +3954,7 @@ function searchTypeHTML(type) {
       <span class="search-result-icon">${icon("layers")}</span>
       <span class="search-result-main">
         <strong>${esc(type.name)}</strong>
-        <small>Code ${type.code} · ${db.stock[type.code] || 0} in stock</small>
+        <small>Code ${type.code} · ${esc(typeDimensionsShort(type))} · ${db.stock[type.code] || 0} in stock</small>
       </span>
       <svg class="icon chevron" aria-hidden="true"><use href="#i-chevron-right"></use></svg>
     </button>
@@ -2998,6 +4125,18 @@ async function copyText(text) {
 
 function bindEvents() {
   document.addEventListener("click", (event) => {
+    const comboOption = event.target.closest("[data-combo-option]");
+    if (comboOption) {
+      chooseComboOption(comboOption.closest("[data-combo]"), comboOption);
+      return;
+    }
+
+    const comboInput = event.target.closest("[data-combo-input]");
+    if (comboInput) {
+      openCombo(comboInput.closest("[data-combo]"));
+      return;
+    }
+
     const statusTab = event.target.closest("[data-status-tab]");
     if (statusTab) {
       const scope = statusTab.closest("[data-filter-scope]");
@@ -3089,6 +4228,21 @@ function bindEvents() {
         return;
       }
 
+      if (action === "export-history") {
+        exportHistoryCsv();
+        return;
+      }
+
+      if (action === "backup-json") {
+        exportBackup();
+        return;
+      }
+
+      if (action === "restore-json") {
+        openRestoreModal();
+        return;
+      }
+
       if (action === "reset-demo") {
         openResetModal();
         return;
@@ -3113,6 +4267,8 @@ function bindEvents() {
       }
     }
 
+    closeAllCombos();
+
     const overlay = event.target.closest(".overlay");
     if (overlay && event.target === overlay) {
       hideOverlay();
@@ -3121,6 +4277,10 @@ function bindEvents() {
 
   document.addEventListener("input", (event) => {
     const target = event.target;
+
+    if (target.matches("[data-combo-input]")) {
+      filterCombo(target.closest("[data-combo]"));
+    }
 
     if (target.matches('[data-filter="search"]')) {
       applyFilters(target.closest("[data-filter-scope]"));
@@ -3162,9 +4322,18 @@ function bindEvents() {
       return;
     }
 
+    if (target.matches("[data-sort]")) {
+      applySort(target.closest("[data-sort-scope]") || target.closest("[data-filter-scope]"));
+      return;
+    }
+
     if (target.matches("[data-filter]") && target.dataset.filter !== "search") {
       applyFilters(target.closest("[data-filter-scope]"));
       return;
+    }
+
+    if (target.closest("#restoreForm")) {
+      setFormError(target.closest("form"), "");
     }
 
     const addForm = target.closest("#addColumnForm");
@@ -3208,6 +4377,12 @@ function bindEvents() {
     if (event.target.id === "stockAdjustForm") {
       event.preventDefault();
       submitStockAdjustment(event.target);
+      return;
+    }
+
+    if (event.target.id === "restoreForm") {
+      event.preventDefault();
+      submitRestore(event.target);
     }
   });
 
@@ -3216,6 +4391,44 @@ function bindEvents() {
       event.preventDefault();
       if (!ui.overlay) openSearch();
       return;
+    }
+
+    const comboInput = event.target.closest("[data-combo-input]");
+    if (comboInput) {
+      const combo = comboInput.closest("[data-combo]");
+      const list = combo?.querySelector(".combo-list");
+
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        if (list?.hidden) openCombo(combo);
+        moveComboSelection(combo, event.key === "ArrowDown" ? 1 : -1);
+        return;
+      }
+
+      if (event.key === "Enter") {
+        event.preventDefault();
+        if (list?.hidden) {
+          openCombo(combo);
+          return;
+        }
+        const active = combo.querySelector(".combo-option.is-active:not([hidden])");
+        const exact = [...combo.querySelectorAll(".combo-option:not([hidden])")]
+          .find((option) => option.dataset.label.toLocaleLowerCase("en") === comboInput.value.trim().toLocaleLowerCase("en"));
+        const fallback = combo.querySelector(".combo-option:not([hidden])");
+        const choice = active || exact || fallback;
+        if (choice) chooseComboOption(combo, choice);
+        return;
+      }
+
+      if (event.key === "Escape" && !list?.hidden) {
+        event.preventDefault();
+        closeCombo(combo);
+        return;
+      }
+
+      if (event.key === "Tab") {
+        closeCombo(combo);
+      }
     }
 
     if (event.key === "Escape") {
@@ -3338,6 +4551,7 @@ function boot() {
   applyTheme(loadTheme());
   bindEvents();
   syncSidebarInert();
+  updateSaveStatus();
   render();
 }
 
