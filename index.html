@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IPC Column Registry — HPLC Column Management</title>
+  <meta name="description" content="HPLC column registry: unactivated stock, column activations, purposes, and change history.">
+  <meta name="theme-color" content="#f7f7f8">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:title" content="IPC Column Registry — HPLC Column Management">
+  <meta property="og:description" content="HPLC column registry: unactivated stock, column activations, purposes, and change history.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/fonts/inter-latin-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/jetbrains-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/app.css">
+  <link rel="stylesheet" href="assets/spectrum.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <noscript>
+    <div class="noscript-banner">Enable JavaScript to use IPC Column Registry.</div>
+  </noscript>
+
+  <svg class="icon-sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></symbol>
+    <symbol id="i-activity" viewBox="0 0 24 24"><path d="M3 12h4l2.5-7 5 14 2.5-7h4"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-archive" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M10 12h4"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m20 6-11 11-5-5"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="i-column" viewBox="0 0 24 24"><rect x="8" y="2.5" width="8" height="19" rx="2.5"/><path d="M8 7.5h8M8 12h8M8 16.5h8"/></symbol>
+    <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5.5 9.5A2 2 0 0 0 6.2 22h11.6a2 2 0 0 0 1.7-3.5L14 9V3"/><path d="M7.5 15h9"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 24 24"><path d="M3 5h18M6 12h12M10 19h4"/></symbol>
+    <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></symbol>
+    <symbol id="i-trend" viewBox="0 0 24 24"><path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/></symbol>
+  </svg>
+
+  <div class="app-shell" id="appShell">
+    <button class="sidebar-scrim" type="button" data-action="close-sidebar" tabindex="-1" aria-label="Close menu"></button>
+
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+      <a class="brand" href="#/dashboard" aria-label="IPC Column Registry — back to overview">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 40 40" fill="none">
+            <rect width="40" height="40" rx="11" fill="currentColor"/>
+            <path d="M8 27.5h4.2l2.6-9.4 3.5 13 3.6-16 3.7 12.4 2.4-5.5H33" stroke="white" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span class="brand-text">
+          <strong>IPC</strong>
+          <small>Column Registry</small>
+        </span>
+      </a>
+
+      <div class="sidebar-block">
+        <p class="nav-label">Workspace</p>
+        <nav class="nav" aria-label="Workspace">
+          <a class="nav-link" href="#/dashboard" data-nav="dashboard">
+            <svg class="icon" aria-hidden="true"><use href="#i-grid"></use></svg>
+            <span>Overview</span>
+          </a>
+          <a class="nav-link" href="#/usage" data-nav="usage">
+            <svg class="icon" aria-hidden="true"><use href="#i-trend"></use></svg>
+            <span>Usage</span>
+          </a>
+          <a class="nav-link" href="#/activations" data-nav="activations">
+            <svg class="icon" aria-hidden="true"><use href="#i-activity"></use></svg>
+            <span>Activations</span>
+            <span class="nav-badge" id="navActivationCount" hidden></span>
+          </a>
+          <a class="nav-link" href="#/history" data-nav="history">
+            <svg class="icon" aria-hidden="true"><use href="#i-history"></use></svg>
+            <span>History</span>
+          </a>
+        </nav>
+      </div>
+
+      <div class="sidebar-block">
+        <p class="nav-label">Inventory</p>
+        <nav class="nav" aria-label="Inventory">
+          <a class="nav-link" href="#/types" data-nav="types">
+            <svg class="icon" aria-hidden="true"><use href="#i-layers"></use></svg>
+            <span>Column types</span>
+          </a>
+          <a class="nav-link" href="#/stock" data-nav="stock">
+            <svg class="icon" aria-hidden="true"><use href="#i-archive"></use></svg>
+            <span>Stock</span>
+            <span class="nav-badge nav-badge--stock" id="navStockCount">24</span>
+          </a>
+        </nav>
+      </div>
+
+      <div class="sidebar-spacer"></div>
+
+      <div class="sidebar-note">
+        <div class="sidebar-note-icon" aria-hidden="true">
+          <svg class="icon"><use href="#i-database"></use></svg>
+        </div>
+        <div>
+          <strong>Local data</strong>
+          <p>Stored automatically in this browser.</p>
+        </div>
+      </div>
+
+      <div class="sidebar-tools">
+        <button class="theme-toggle" type="button" data-action="toggle-theme" aria-pressed="false">
+          <span class="theme-toggle-icon">
+            <svg class="icon icon-sun" aria-hidden="true"><use href="#i-sun"></use></svg>
+            <svg class="icon icon-moon" aria-hidden="true"><use href="#i-moon"></use></svg>
+          </span>
+          <span class="theme-toggle-text">Dark mode</span>
+          <span class="switch" aria-hidden="true"><span class="switch-thumb"></span></span>
+        </button>
+        <button class="reset-link" type="button" data-action="reset-demo">
+          <svg class="icon" aria-hidden="true"><use href="#i-refresh"></use></svg>
+          Reset demo data
+        </button>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-btn menu-btn" type="button" data-action="open-sidebar" aria-label="Open menu" aria-controls="sidebar" aria-expanded="false">
+            <svg class="icon" aria-hidden="true"><use href="#i-menu"></use></svg>
+          </button>
+          <a class="topbar-brand" href="#/dashboard" aria-label="IPC Column Registry — back to overview">IPC</a>
+          <nav class="crumbs" id="crumbs" aria-label="Breadcrumb">
+            <a href="#/dashboard">Registry</a>
+            <svg class="icon" aria-hidden="true"><use href="#i-chevron-right"></use></svg>
+            <span>Overview</span>
+          </nav>
+        </div>
+
+        <div class="topbar-right">
+          <button class="search-trigger" type="button" data-action="open-search" aria-label="Search registry, Ctrl K" aria-keyshortcuts="Control+K">
+            <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
+            <span class="search-trigger-text">Search registry…</span>
+            <kbd aria-hidden="true">Ctrl K</kbd>
+          </button>
+
+          <label class="year-picker">
+            <span class="year-picker-label">Year</span>
+            <select id="yearSelect" aria-label="Select activation year"></select>
+          </label>
+
+          <button class="btn btn-primary topbar-add" type="button" data-action="add-column" aria-label="Add activation">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+            <span>Add activation</span>
+          </button>
+        </div>
+      </header>
+
+      <main id="main" tabindex="-1"></main>
+    </div>
+  </div>
+
+  <div id="modalRoot"></div>
+  <div id="toastRoot" class="toast-root" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="assets/app.js" defer></script>
+</body>
+</html>
